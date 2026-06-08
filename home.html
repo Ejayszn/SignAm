@@ -8,168 +8,309 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
   <style>
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .serif-font { font-family: 'Playfair Display', serif; }
+
+    .form-step {
+      animation: stepIn 0.22s ease forwards;
     }
-    .serif-font {
-      font-family: 'Playfair Display', serif;
+    @keyframes stepIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .field {
+      width: 100%;
+      padding: 0.625rem 1rem;
+      border-radius: 0.75rem;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #0f172a;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      outline: none;
+    }
+    .field:focus {
+      border-color: #059669;
+      box-shadow: 0 0 0 3px rgba(5,150,105,0.1);
+      background: #fff;
+    }
+    .field.error {
+      border-color: #f87171;
+      box-shadow: 0 0 0 3px rgba(248,113,113,0.1);
+    }
+
+    /* Modal shared */
+    .modal-wrap {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-wrap.open { display: flex; }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.93); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .modal-card { animation: popIn 0.2s ease forwards; }
+
+    /* NIN input loading spinner */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 0.8s linear infinite; }
+
+    /* Verification status badge pulse */
+    @keyframes verifiedPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(5,150,105,0.4); }
+      50%       { box-shadow: 0 0 0 6px rgba(5,150,105,0); }
+    }
+    .verified-pulse { animation: verifiedPulse 1.2s ease 2; }
+
+    #toast {
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    #toast.hidden {
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
     }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased">
 
+  <!-- ── HEADER ── -->
   <header class="bg-white border-b border-slate-200 sticky top-0 z-50 px-4 py-3 flex justify-between items-center">
-  <div class="flex items-center gap-2">
-    <a href="home.html" class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">S</a>
-    <span class="font-bold text-xl tracking-tight">Sign<span class="text-emerald-600">Am</span></span>
-  </div>
-  
-  <div class="flex items-center gap-3">
-    <div id="userDisplayBadge" class="hidden flex items-center gap-2">
-      <div id="avatarContainer" class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center justify-center border border-emerald-200 overflow-hidden shadow-sm">
-        </div>
-      <span id="userNameText" class="text-xs font-semibold text-slate-700 hidden sm:inline-block">Loading...</span>
+    <div class="flex items-center gap-2">
+      <a href="home.html" class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">S</a>
+      <span class="font-bold text-xl tracking-tight">Sign<span class="text-emerald-600">Am</span></span>
     </div>
-
-    <button id="authStatusBtn" class="text-xs font-semibold px-3 py-1 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 rounded-full text-slate-600 transition-all cursor-pointer">
-      Log out
-    </button>
-  </div>
-</header>
-
-  <main class="max-w-6xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-    
-    <section class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm transition-all">
-      
-      <div class="w-full bg-slate-100 h-1.5 rounded-full mb-6 overflow-hidden">
-        <div id="progressBar" class="bg-emerald-600 h-full w-1/3 transition-all duration-300"></div>
+    <div class="flex items-center gap-3">
+      <div id="userDisplayBadge" style="display:none;" class="items-center gap-2 flex">
+        <div id="avatarContainer" class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center justify-center border border-emerald-200 overflow-hidden shadow-sm"></div>
+        <span id="userNameText" class="text-xs font-semibold text-slate-700 hidden sm:inline-block"></span>
       </div>
+      <button id="authStatusBtn" class="text-xs font-semibold px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-600 transition-all">
+        Log out
+      </button>
+    </div>
+  </header>
+
+  <!-- ── MAIN ── -->
+  <main class="max-w-6xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+
+    <!-- LEFT: Form -->
+    <section class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm">
+
+      <div class="w-full bg-slate-100 h-1.5 rounded-full mb-1.5 overflow-hidden">
+        <div id="progressBar" class="bg-emerald-600 h-full transition-all duration-300" style="width:25%"></div>
+      </div>
+      <p id="stepLabel" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-5">Step 1 of 4</p>
 
       <form id="agreementForm" onsubmit="event.preventDefault();">
-        
+
+        <!-- ── STEP 1: Parties ── -->
         <div id="step1" class="form-step space-y-5">
-  <div>
-    <h2 class="text-xl font-bold tracking-tight text-slate-900">Who is doing this business?</h2>
-    <p class="text-xs text-slate-500 mt-1">Enter full legal names for the contract. You can add as many people as you need.</p>
-  </div>
-  
-  <div id="partiesContainer" class="space-y-4">
-    
-    <div class="space-y-3 border-l-2 border-emerald-500 pl-3">
-      <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-700">Your Details (Party A - Creator)</h3>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <input type="text" placeholder="Your Full Name/ Company Name" class="party-name w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium" required>
-        <input type="tel" placeholder="Your WhatsApp Number" class="party-phone w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium" required>
-      </div>
-    </div>
+          <div>
+            <h2 class="text-xl font-bold tracking-tight text-slate-900">Who is doing this business?</h2>
+            <p class="text-xs text-slate-500 mt-1">Enter full legal names for the contract. Add more parties if needed.</p>
+          </div>
 
-    <div class="space-y-3 border-l-2 border-slate-300 pl-3 pt-2">
-      <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Partner Details (Party B)</h3>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <input type="text" placeholder="Their Full Name/ Company name" class="party-name w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium" required>
-        <input type="tel" placeholder="Their WhatsApp Number" class="party-phone w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm font-medium" required>
-      </div>
-    </div>
+          <div id="partiesContainer" class="space-y-4">
+            <div class="space-y-3 border-l-2 border-emerald-500 pl-3">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-700">Your Details (Party A — Creator)</h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input type="text" id="creatorName" placeholder="Your Full Name / Company Name" class="field party-name" required autocomplete="name">
+                <input type="tel"  id="creatorPhone" placeholder="Your WhatsApp Number" class="field party-phone" required autocomplete="tel">
+              </div>
+              <input type="email" id="creatorEmail" placeholder="Your Email Address (for document delivery)" class="field" required autocomplete="email">
+            </div>
+            <div class="space-y-3 border-l-2 border-slate-300 pl-3 pt-2">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Partner Details (Party B)</h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input type="text" placeholder="Their Full Name / Company Name" class="field party-name" required>
+                <input type="tel"  placeholder="Their WhatsApp Number"          class="field party-phone" required>
+              </div>
+            </div>
+          </div>
 
-  </div>
+          <button type="button" id="addPartyBtn"
+            class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-2 rounded-xl transition-all">
+            ➕ Add Another Person to this Deal
+          </button>
+        </div>
 
-  <div class="pt-2">
-    <button type="button" id="addPartyBtn" class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100/80 px-3 py-2 rounded-xl transition-all">
-      ➕ Add Another Person to this Deal
-    </button>
-  </div>
-</div>
-
+        <!-- ── STEP 2: Terms ── -->
         <div id="step2" class="form-step hidden space-y-5">
           <div>
             <h2 class="text-xl font-bold tracking-tight text-slate-900">What did you people agree on?</h2>
-            <p class="text-xs text-slate-500 mt-1">Write it down exactly how you discussed it. Our AI will clean it up.</p>
+            <p class="text-xs text-slate-500 mt-1">Write it how you discussed it. Our AI will shape it into proper legal terms.</p>
           </div>
-          
           <div class="space-y-4">
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Select Agreement Type</label>
-              <select id="agreementType" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 bg-white transition font-medium text-sm">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Agreement Type</label>
+              <select id="agreementType" class="field">
                 <option value="peer_loan">Money Loan / Borrowing</option>
-                <option value="freelance">Freelance Job / Service Creative</option>
+                <option value="freelance">Freelance Job / Service Delivery</option>
                 <option value="item_rental">Item Rental / Equipment Hire</option>
                 <option value="business_supply">Business Supply / Goods Delivery</option>
               </select>
             </div>
-
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Write the terms simply (Be clear about amounts & dates)</label>
-              <textarea id="rawTerms" rows="5" placeholder="e.g., I am giving Tunde 50,000 Naira today to buy goods. He promises to pay me back completely on or before July 15th, 2026. If he doesn't pay, he will clear my shop inventory." class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 bg-slate-50/50 transition resize-none text-sm leading-relaxed"></textarea>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                Write the terms simply <span class="normal-case font-normal text-slate-400">(be clear about amounts & dates)</span>
+              </label>
+              <textarea id="rawTerms" rows="5" required
+                placeholder="e.g., I am giving Tunde ₦50,000 today to buy goods. He promises to pay me back completely on or before July 15th, 2026. If he doesn't pay, he will clear my shop inventory."
+                class="field resize-none leading-relaxed"></textarea>
+              <!-- AI polish button — wired to Groq later -->
+              <button type="button" id="aiPolishBtn"
+                class="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-violet-600 hover:text-violet-700 bg-violet-50 hover:bg-violet-100 px-3 py-2 rounded-xl transition-all">
+                ✨ Polish with AI
+              </button>
             </div>
           </div>
         </div>
 
+        <!-- ── STEP 3: Verification Crossroads ── -->
         <div id="step3" class="form-step hidden space-y-5">
           <div>
-            <h2 class="text-xl font-bold tracking-tight text-slate-900">Sign with your finger</h2>
-            <p class="text-xs text-slate-500 mt-1">Draw your signature inside the box below to authorize these terms.</p>
+            <h2 class="text-xl font-bold tracking-tight text-slate-900">How secure do you want this?</h2>
+            <p class="text-xs text-slate-500 mt-1">Choose your protection level. This decision affects how enforceable your contract is.</p>
           </div>
-          
+
+          <!-- Verified option -->
+          <button type="button" id="chooseVerifyBtn"
+            class="w-full text-left p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50/60 hover:bg-emerald-50 transition-all space-y-1.5 group">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">🪪</span>
+                <span class="text-sm font-bold text-slate-900">Verify My Identity</span>
+              </div>
+              <span class="text-xs font-bold text-white bg-emerald-600 px-2.5 py-1 rounded-full">₦700</span>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed pl-7">
+              Your NIN is verified against your name. The agreement gets a government-backed certificate of authenticity — significantly stronger in a dispute.
+            </p>
+            <p class="text-[10px] font-bold text-emerald-700 pl-7 flex items-center gap-1">
+              ✓ Recommended &nbsp;·&nbsp; ✓ Admissible under Nigerian Evidence Act 2011
+            </p>
+          </button>
+
+          <!-- Skip option -->
+          <button type="button" id="chooseSkipBtn"
+            class="w-full text-left p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 transition-all space-y-1.5">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">📄</span>
+              <span class="text-sm font-semibold text-slate-600">Skip Verification — Use Basic Draft</span>
+            </div>
+            <p class="text-xs text-slate-500 leading-relaxed pl-7">
+              Free, but the document has no identity audit. Harder to enforce if the other party disputes.
+            </p>
+          </button>
+        </div>
+
+        <!-- ── STEP 4: Signature ── -->
+        <div id="step4" class="form-step hidden space-y-5">
+          <div class="flex items-start gap-3">
+            <div class="space-y-0.5">
+              <h2 class="text-xl font-bold tracking-tight text-slate-900">Sign with your finger</h2>
+              <p class="text-xs text-slate-500">Draw your signature to authorize these terms.</p>
+            </div>
+            <!-- Verification badge — shown/hidden by JS -->
+            <div id="verifiedBadge" class="hidden ml-auto shrink-0 flex items-center gap-1.5 bg-emerald-100 border border-emerald-300 text-emerald-800 text-[10px] font-bold px-2.5 py-1.5 rounded-full verified-pulse">
+              🪪 NIN Verified
+            </div>
+          </div>
+
           <div class="relative w-full h-48 bg-slate-50 rounded-xl border-2 border-dashed border-slate-300 overflow-hidden shadow-inner">
             <canvas id="signatureCanvas" class="w-full h-full touch-none cursor-crosshair"></canvas>
+            <p id="canvasHint" class="absolute inset-0 flex items-center justify-center text-xs text-slate-400 pointer-events-none select-none font-medium">
+              ✍️ Sign here
+            </p>
           </div>
-          
+
           <div class="flex justify-end">
-            <button type="button" id="clearCanvasBtn" class="text-xs font-bold text-red-500 hover:text-red-600 p-1 transition-colors">
-              🗑️ Clear Ink / Clean Screen
+            <button type="button" id="clearCanvasBtn"
+              class="text-xs font-bold text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-xl transition-colors">
+              🗑️ Clear Signature
             </button>
           </div>
         </div>
 
+        <!-- Nav -->
         <div class="flex justify-between items-center mt-8 pt-4 border-t border-slate-100">
-          <button type="button" id="prevBtn" class="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 active:bg-slate-200 rounded-xl transition-all invisible">
-            Back
+          <button type="button" id="prevBtn"
+            class="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-all invisible">
+            ← Back
           </button>
-          <button type="button" id="nextBtn" class="px-6 py-2.5 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-xl shadow-sm transition-all">
-            Continue
+          <button type="button" id="nextBtn"
+            class="px-6 py-2.5 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition-all">
+            Continue →
           </button>
         </div>
 
       </form>
     </section>
 
+    <!-- RIGHT: Live Preview -->
     <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-4 lg:sticky lg:top-24">
       <div class="flex justify-between items-center border-b border-slate-100 pb-3">
         <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Live Document Preview</h3>
-        <span class="text-[10px] font-bold px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-md">Draft Form</span>
+        <div class="flex items-center gap-2">
+          <span id="previewVerifiedTag" class="hidden text-[10px] font-bold px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md">NIN Verified</span>
+          <span class="text-[10px] font-bold px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-md">Draft</span>
+        </div>
       </div>
-      
-      <div class="document-preview-paper bg-white p-6 border border-slate-300 shadow-inner rounded-md space-y-6 overflow-y-auto max-h-[420px] text-xs leading-relaxed text-slate-800">
-        <div class="text-center space-y-1 border-b border-slate-200/60 pb-3">
-          <h1 class="text-sm font-bold uppercase tracking-wider font-serif serif-font text-slate-900">Memorandum of Understanding</h1>
+
+      <div class="bg-white p-6 border border-slate-200 shadow-inner rounded-xl space-y-5 overflow-y-auto max-h-[440px] text-xs leading-relaxed text-slate-800">
+        <div class="text-center space-y-1 border-b border-slate-200 pb-3">
+          <h1 class="text-sm font-bold uppercase tracking-widest serif-font text-slate-900">Memorandum of Understanding</h1>
           <p class="text-slate-400 font-mono text-[9px]">DOCUMENT ID: PENDING GENERATION</p>
         </div>
 
         <div class="space-y-1.5">
-          <p class="font-bold border-b border-slate-100 pb-0.5 text-slate-900 font-mono text-[10px] tracking-wide uppercase">1. PARTIES INVOLVED</p>
-          <p>This active agreement is made valid on this day between the First Party: <span id="previewPartyA" class="font-semibold underline text-slate-900 bg-slate-50 px-1 rounded">[Your Phone Number]</span> and the Second Party: <span id="previewPartyB" class="font-semibold underline text-slate-900 bg-slate-50 px-1 rounded">[Their Phone Number]</span>.</p>
+          <p class="font-bold text-slate-900 font-mono text-[10px] tracking-widest uppercase border-b border-slate-100 pb-1">1. Parties Involved</p>
+          <p id="previewParties">
+            This agreement is entered into between
+            <span class="font-semibold underline text-slate-900 bg-slate-50 px-1 rounded">[Party A Name]</span>
+            and
+            <span class="font-semibold underline text-slate-900 bg-slate-50 px-1 rounded">[Party B Name]</span>.
+          </p>
         </div>
 
         <div class="space-y-1.5">
-          <p class="font-bold border-b border-slate-100 pb-0.5 text-slate-900 font-mono text-[10px] tracking-wide uppercase">2. AGREED TERMS & COVENANTS</p>
-          <p id="previewTerms" class="text-slate-500 italic font-medium bg-slate-50/40 p-2.5 rounded-xl border border-slate-100 leading-relaxed">
-            Start typing out what you people agreed on inside the form box. You will watch it map and update directly inside this legal preview paper sheet in real-time...
+          <p class="font-bold text-slate-900 font-mono text-[10px] tracking-widest uppercase border-b border-slate-100 pb-1">2. Agreed Terms & Covenants</p>
+          <p id="previewTerms" class="text-slate-500 italic bg-slate-50 p-2.5 rounded-xl border border-slate-100 leading-relaxed">
+            Start typing what you both agreed on — watch it update here in real time...
           </p>
+        </div>
+
+        <!-- Verification section — shown only when NIN verified -->
+        <div id="previewVerificationSection" class="hidden space-y-1.5">
+          <p class="font-bold text-slate-900 font-mono text-[10px] tracking-widest uppercase border-b border-slate-100 pb-1">3. Identity Verification</p>
+          <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 space-y-1">
+            <p class="text-emerald-800 font-semibold">✓ NIN Verified — Certificate of Authenticity Issued</p>
+            <p class="text-emerald-700 text-[10px]">Creator identity confirmed via government NIN database. Audit trail secured.</p>
+          </div>
         </div>
 
         <div class="grid grid-cols-2 gap-4 pt-4 border-t border-dashed border-slate-200">
           <div class="space-y-1.5">
             <p class="text-[9px] text-slate-400 uppercase font-bold tracking-wider">First Party Signature</p>
-            <div class="h-14 w-full border border-slate-200 bg-slate-50/50 rounded-xl flex items-center justify-center overflow-hidden p-1">
-              <img id="previewSigImage" class="max-h-full max-w-full hidden object-contain" alt="Signature Preview Trace">
+            <div class="h-14 border border-slate-200 bg-slate-50 rounded-xl flex items-center justify-center overflow-hidden p-1">
+              <img id="previewSigImage" class="max-h-full max-w-full hidden object-contain" alt="Signature">
+              <span id="previewSigPlaceholder" class="text-[9px] text-slate-400 italic">Pending</span>
             </div>
           </div>
           <div class="space-y-1.5">
             <p class="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Second Party Signature</p>
-            <div class="h-14 w-full border border-slate-100 bg-slate-50 rounded-xl flex items-center justify-center text-center">
-              <span class="text-[9px] text-slate-400 italic font-medium">Awaiting Partner link signature</span>
+            <div class="h-14 border border-slate-100 bg-slate-50 rounded-xl flex items-center justify-center text-center px-2">
+              <span class="text-[9px] text-slate-400 italic">Awaiting partner link</span>
             </div>
           </div>
         </div>
@@ -177,31 +318,146 @@
     </section>
 
   </main>
-<div id="logoutModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-  <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
-  
-  <div class="relative bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 max-w-xs w-full text-center space-y-4 transform scale-95 transition-all duration-300">
-    <div class="w-12 h-12 rounded-full bg-red-50 border border-red-200 flex items-center justify-center mx-auto text-red-600 text-lg font-bold">
-      ⚠️
-    </div>
-    
-    <div class="space-y-1">
-      <h3 class="text-base font-bold text-slate-900">Logging Out?</h3>
-      <p class="text-xs text-slate-500 leading-relaxed">
-        Are you sure you want to log out of your SignAm workspace session?
-      </p>
-    </div>
-    
-    <div class="grid grid-cols-2 gap-2 pt-2">
-      <button type="button" id="cancelLogoutBtn" class="w-full bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 font-semibold py-2.5 px-4 rounded-xl transition text-xs">
-        Cancel
-      </button>
-      <button type="button" id="confirmLogoutBtn" class="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold py-2.5 px-4 rounded-xl transition shadow-sm text-xs">
-        Sign Me Out
-      </button>
+
+
+  <!-- ════════════════════════════════════════
+       MODALS
+  ════════════════════════════════════════ -->
+
+  <!-- ── MODAL: Skip Warning ── -->
+  <div id="skipWarningModal" class="modal-wrap">
+    <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
+    <div class="modal-card relative bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 max-w-sm w-full space-y-5">
+      <div class="w-12 h-12 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto text-xl">⚠️</div>
+      <div class="text-center space-y-2">
+        <h3 class="text-base font-bold text-slate-900">Are you sure you want to skip?</h3>
+        <p class="text-xs text-slate-600 leading-relaxed">
+          Unverified agreements have <strong>no government-backed identity audit</strong>. If your partner disputes the deal, you have no proof that the person who signed is who they say they are.
+        </p>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-left space-y-1.5 mt-2">
+          <p class="text-[11px] font-bold text-amber-800 uppercase tracking-wide">What you lose without verification:</p>
+          <p class="text-[11px] text-amber-700">✗ No NIN-linked identity trail</p>
+          <p class="text-[11px] text-amber-700">✗ No certificate of authenticity</p>
+          <p class="text-[11px] text-amber-700">✗ Weaker enforceability in a dispute</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2 pt-1">
+        <button id="skipWarningBackBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm">
+          ← Go Back & Verify
+        </button>
+        <button id="skipWarningConfirmBtn" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold py-2.5 rounded-xl text-xs transition">
+          I understand, skip
+        </button>
+      </div>
     </div>
   </div>
-</div>
+
+
+  <!-- ── MODAL: NIN Input + Verify ── -->
+  <div id="ninModal" class="modal-wrap">
+    <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
+    <div class="modal-card relative bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 max-w-sm w-full space-y-5">
+
+      <!-- Default state: NIN input -->
+      <div id="ninInputState">
+        <div class="space-y-1 mb-4">
+          <h3 class="text-base font-bold text-slate-900">Enter your NIN</h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Your 11-digit National Identification Number will be matched against the name you provided. This confirms you are who you say you are.
+          </p>
+        </div>
+
+        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 space-y-1 mb-4">
+          <p class="text-[11px] font-bold text-emerald-800 uppercase tracking-wide">What this verification does:</p>
+          <p class="text-[11px] text-emerald-700">✓ Links your real identity to this contract</p>
+          <p class="text-[11px] text-emerald-700">✓ Creates a government-backed audit trail</p>
+          <p class="text-[11px] text-emerald-700">✓ Makes the document admissible under Nigerian Evidence Act 2011</p>
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">NIN (11 digits)</label>
+          <input type="tel" id="ninInput" maxlength="11" placeholder="e.g., 12345678901"
+            class="field tracking-widest text-center text-base font-bold" autocomplete="off">
+          <p id="ninInputError" class="text-[11px] font-semibold text-red-500 hidden"></p>
+        </div>
+
+        <div class="flex gap-2 mt-4">
+          <button id="ninModalCloseBtn" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold py-2.5 rounded-xl text-xs transition">
+            Cancel
+          </button>
+          <!-- Button label changes to "Verify & Pay ₦700" once NIN is 11 digits -->
+          <button id="ninVerifyBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm">
+            Continue
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading state: checking NIN -->
+      <div id="ninLoadingState" class="hidden text-center space-y-4 py-4">
+        <div class="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full spin mx-auto"></div>
+        <div>
+          <p class="text-sm font-bold text-slate-900">Checking your NIN...</p>
+          <p class="text-xs text-slate-500 mt-0.5">Matching against government identity database.</p>
+        </div>
+      </div>
+
+      <!-- Mismatch state: name doesn't match -->
+      <div id="ninMismatchState" class="hidden text-center space-y-4">
+        <div class="w-12 h-12 rounded-full bg-red-50 border border-red-200 flex items-center justify-center mx-auto text-xl">❌</div>
+        <div>
+          <h3 class="text-base font-bold text-slate-900">Name Mismatch</h3>
+          <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+            The name on this NIN does not match the name you provided. Please check your details and try again.
+          </p>
+          <p class="text-[11px] text-slate-400 mt-2">No payment has been taken.</p>
+        </div>
+        <button id="ninMismatchRetryBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm">
+          Try Again
+        </button>
+      </div>
+
+      <!-- Success state: match confirmed, ready to pay -->
+      <div id="ninMatchState" class="hidden text-center space-y-4">
+        <div class="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto text-xl">✓</div>
+        <div>
+          <h3 class="text-base font-bold text-slate-900">Identity Confirmed!</h3>
+          <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+            Your NIN matches your name. Complete the ₦700 payment to issue your certificate of authenticity and proceed to signing.
+          </p>
+        </div>
+        <!-- Paystack button — wired in JS, currently a stub -->
+        <button id="paystackPayBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm transition shadow-md shadow-emerald-600/20">
+          Pay ₦700 & Continue →
+        </button>
+        <p class="text-[10px] text-slate-400">Secured by Paystack. You will not be charged unless you click above.</p>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ── MODAL: Logout ── -->
+  <div id="logoutModal" class="modal-wrap">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+    <div class="modal-card relative bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 max-w-xs w-full text-center space-y-4">
+      <div class="w-12 h-12 rounded-full bg-red-50 border border-red-200 flex items-center justify-center mx-auto text-lg">⚠️</div>
+      <div>
+        <h3 class="text-base font-bold text-slate-900">Logging Out?</h3>
+        <p class="text-xs text-slate-500 mt-1 leading-relaxed">Your draft will not be saved. Are you sure you want to leave?</p>
+      </div>
+      <div class="grid grid-cols-2 gap-2 pt-1">
+        <button id="cancelLogoutBtn" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 rounded-xl text-xs transition">Cancel</button>
+        <button id="confirmLogoutBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm">Sign Me Out</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── TOAST ── -->
+  <div id="toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-lg pointer-events-none">
+    Message here
+  </div>
+
   <script type="module" src="app.js"></script>
 </body>
 </html>

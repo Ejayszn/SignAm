@@ -1,16 +1,22 @@
-// 1. Import required tools directly from the Firebase web client modules setup
+// ─────────────────────────────────────────────
+//  SignAm — Auth JS
+//  Handles: Login / Sign Up / Password Recovery / Google OAuth
+// ─────────────────────────────────────────────
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-import { 
-  getAuth, 
+import {
+  getAuth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
   sendPasswordResetEmail,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  browserLocalPersistence,
+  browserSessionPersistence,
+  setPersistence,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
-// 2. Your project application's configuration keys 
 const firebaseConfig = {
   apiKey: "AIzaSyC4yCNmFHAkFoO7nYfdS2XcgIHsZn_0_ys",
   authDomain: "signamnow.firebaseapp.com",
@@ -18,280 +24,346 @@ const firebaseConfig = {
   storageBucket: "signamnow.firebasestorage.app",
   messagingSenderId: "267871547400",
   appId: "1:267871547400:web:b70ac6c08fa0cfdd1561bd",
-  measurementId: "G-4C1B313HBZ"
+  measurementId: "G-4C1B313HBZ",
 };
 
-// 3. Initialize Firebase 
-const app = initializeApp(firebaseConfig);
+const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-
-// App UI States
-let isSignUpMode = false;
-let isPasswordRecoveryMode = false; 
-
-// DOM Elements
-const termsAgreementRow = document.getElementById('termsAgreementRow');
-const agreeToTerms = document.getElementById('agreeToTerms');
-const successModal = document.getElementById('successModal');
-const modalMessage = document.getElementById('modalMessage');
-const authForm = document.getElementById('authForm');
-const fullNameRow = document.getElementById('fullNameRow');
-const rememberMeRow = document.getElementById('rememberMeRow');
-const forgotPasswordLink = document.getElementById('forgotPasswordLink');
-
-const recoveryBackRow = document.getElementById('recoveryBackRow');
-const backToLoginBtn = document.getElementById('backToLoginBtn');
-
-const authName = document.getElementById('authName');
-const authEmail = document.getElementById('authEmail');
-const authPassword = document.getElementById('authPassword');
-
-// 💡 FIX: Target the grandparent element to hide the entire password block (label + input)
-const passwordInputRow = authPassword.closest('div:not(.relative)'); 
-
-const submitAuthBtn = document.getElementById('submitAuthBtn');
-
-// Eye Toggle Elements
-const togglePasswordVisibilityBtn = document.getElementById('togglePasswordVisibilityBtn');
-const eyeOpenIcon = document.getElementById('eyeOpenIcon');
-const eyeClosedIcon = document.getElementById('eyeClosedIcon');
-
-// Heading Elements for Text Switching
-const desktopTitle = document.getElementById('desktopTitle');
-const desktopSubtitle = document.getElementById('desktopSubtitle');
-const mobileTitle = document.getElementById('mobileTitle');
-const mobileSubtitle = document.getElementById('mobileSubtitle');
-
-// Mode Toggle Button Triggers
-const topToggleText = document.getElementById('topToggleText');
-const topToggleBtn = document.getElementById('topToggleBtn');
-const bottomToggleText = document.getElementById('bottomToggleText');
-const bottomToggleBtn = document.getElementById('bottomToggleBtn');
-const googleAuthBtn = document.getElementById('googleAuthBtn');
-const googleBtnText = document.getElementById('googleBtnText');
-const authDividerRow = document.getElementById('authDividerRow');
-
-// Initialize Google Auth Provider
 const googleProvider = new GoogleAuthProvider();
 
-// 4. Function to change layout fluidly between Login, Sign Up, and Password Reset states
-function toggleAuthMode() {
-  isSignUpMode = !isSignUpMode;
-  isPasswordRecoveryMode = false; 
-  
+
+// ─── MODE STATE ──────────────────────────────
+// Three possible modes: 'login' | 'signup' | 'recovery'
+
+let mode = 'login';
+
+
+// ─── DOM REFS ────────────────────────────────
+
+const authForm       = document.getElementById('authForm');
+const submitAuthBtn  = document.getElementById('submitAuthBtn');
+const googleAuthBtn  = document.getElementById('googleAuthBtn');
+const googleBtnText  = document.getElementById('googleBtnText');
+const authDividerRow = document.getElementById('authDividerRow');
+
+const authName     = document.getElementById('authName');
+const authEmail    = document.getElementById('authEmail');
+const authPassword = document.getElementById('authPassword');
+const rememberMe   = document.getElementById('rememberMe');
+const agreeToTerms = document.getElementById('agreeToTerms');
+
+const fullNameRow      = document.getElementById('fullNameRow');
+const passwordBlock    = document.getElementById('passwordBlock');
+const rememberMeRow    = document.getElementById('rememberMeRow');
+const termsAgreementRow = document.getElementById('termsAgreementRow');
+const recoveryBackRow  = document.getElementById('recoveryBackRow');
+
+const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+const backToLoginBtn     = document.getElementById('backToLoginBtn');
+
+// Toggle buttons — referenced by stable IDs; no innerHTML recreation needed
+const topToggleBtn    = document.getElementById('topToggleBtn');
+const bottomToggleBtn = document.getElementById('bottomToggleBtn');
+
+// Text-only nodes that JS updates via .textContent (no innerHTML)
+const topToggleText    = document.getElementById('topToggleText');  // <p>
+const bottomToggleLabel = document.getElementById('bottomToggleLabel'); // <span>
+const desktopTitle    = document.getElementById('desktopTitle');
+const desktopSubtitle = document.getElementById('desktopSubtitle');
+const mobileTitle     = document.getElementById('mobileTitle');
+const mobileSubtitle  = document.getElementById('mobileSubtitle');
+
+// Eye toggle
+const togglePasswordVisibilityBtn = document.getElementById('togglePasswordVisibilityBtn');
+const eyeOpenIcon   = document.getElementById('eyeOpenIcon');
+const eyeClosedIcon = document.getElementById('eyeClosedIcon');
+
+// Error elements
+const formErrorBanner = document.getElementById('formErrorBanner');
+const nameError     = document.getElementById('nameError');
+const emailError    = document.getElementById('emailError');
+const passwordError = document.getElementById('passwordError');
+const termsError    = document.getElementById('termsError');
+
+// Success modal
+const successModal  = document.getElementById('successModal');
+const modalMessage  = document.getElementById('modalMessage');
+
+
+// ─── MODE SWITCHER ───────────────────────────
+// Single source of truth — call setMode() to switch, never mutate mode directly elsewhere.
+
+function setMode(newMode) {
+  mode = newMode;
+  clearAllErrors();
+
+  // Shared defaults
   googleAuthBtn.classList.remove('hidden');
   authDividerRow.classList.remove('hidden');
-  passwordInputRow.classList.remove('hidden');
+  passwordBlock.classList.remove('hidden');
   authPassword.required = true;
   recoveryBackRow.classList.add('hidden');
-  
-  if (isSignUpMode) {
-    desktopTitle.innerText = "Create your account";
-    desktopSubtitle.innerText = "Join over 7,000 Nigerian freelancers and vendors today.";
-    mobileTitle.innerText = "Get Started";
-    mobileSubtitle.innerText = "Create an account to protect your business on the go.";
-    
-    submitAuthBtn.innerText = "Create My Account →";
-    
+  forgotPasswordLink.classList.remove('invisible');
+
+  if (mode === 'signup') {
+    desktopTitle.textContent    = 'Create your account';
+    desktopSubtitle.textContent = 'Join Nigerian freelancers and vendors protecting their business today.';
+    mobileTitle.textContent     = 'Get Started';
+    mobileSubtitle.textContent  = 'Create an account to protect your business on the go.';
+    submitAuthBtn.textContent   = 'Create My Account →';
+    googleBtnText.textContent   = 'Sign up with Google';
+
     fullNameRow.classList.remove('hidden');
     authName.required = true;
     rememberMeRow.classList.add('hidden');
-    // SHOW terms row on Sign Up state
+    // FIX: toggle 'flex' explicitly — don't use 'hidden flex' in markup
     termsAgreementRow.classList.remove('hidden');
-    forgotPasswordLink.classList.add('invisible');
-    forgotPasswordLink.classList.add('invisible'); 
-    
-    topToggleText.innerHTML = `Already have an account? <button type="button" id="topToggleBtn" class="text-emerald-600 font-bold hover:underline ml-1">Sign in</button>`;
-    bottomToggleText.innerHTML = `Already have an account? <button type="button" id="bottomToggleBtn" class="text-emerald-600 font-bold hover:underline ml-0.5">Sign in</button>`;
-    googleBtnText.innerText = "Sign up with Google";
-  } else {
-    desktopTitle.innerText = "Welcome back";
-    desktopSubtitle.innerText = "Enter your credentials below to open your workspace dashboard.";
-    mobileTitle.innerText = "Welcome Back";
-    mobileSubtitle.innerText = "Sign in to access your active agreements workspace";
-    
-    submitAuthBtn.innerText = "Open My Workspace →";
-    
+    termsAgreementRow.style.display = 'flex';
+
+    topToggleBtn.textContent    = 'Sign in';
+    bottomToggleBtn.textContent = 'Sign in';
+    bottomToggleLabel.textContent = 'Already have an account?';
+    // Update accessible label on top toggle paragraph
+    topToggleText.firstChild.textContent = 'Already have an account? ';
+
+  } else if (mode === 'login') {
+    desktopTitle.textContent    = 'Welcome back';
+    desktopSubtitle.textContent = 'Enter your credentials to open your workspace.';
+    mobileTitle.textContent     = 'Welcome Back';
+    mobileSubtitle.textContent  = 'Sign in to access your agreements workspace';
+    submitAuthBtn.textContent   = 'Open My Workspace →';
+    googleBtnText.textContent   = 'Continue with Google';
+
     fullNameRow.classList.add('hidden');
     authName.required = false;
     rememberMeRow.classList.remove('hidden');
-    // HIDE terms row on Sign In state
     termsAgreementRow.classList.add('hidden');
+    termsAgreementRow.style.display = '';
     forgotPasswordLink.classList.remove('invisible');
-    forgotPasswordLink.classList.remove('invisible');
-    
-    topToggleText.innerHTML = `New to SignAm? <button type="button" id="topToggleBtn" class="text-emerald-600 font-bold hover:underline ml-1">Create an account</button>`;
-    bottomToggleText.innerHTML = `New to SignAm? <button type="button" id="bottomToggleBtn" class="text-emerald-600 font-bold hover:underline ml-0.5">Create an account</button>`;
-    googleBtnText.innerText = "Continue with Google";
+
+    topToggleBtn.textContent    = 'Create an account';
+    bottomToggleBtn.textContent = 'Create an account';
+    bottomToggleLabel.textContent = 'New to SignAm?';
+    topToggleText.firstChild.textContent = 'New to SignAm? ';
+
+  } else if (mode === 'recovery') {
+    desktopTitle.textContent    = 'Reset your password';
+    desktopSubtitle.textContent = "Enter your registered email and we'll send you a secure recovery link.";
+    mobileTitle.textContent     = 'Reset Password';
+    mobileSubtitle.textContent  = 'Get back into your SignAm workspace.';
+    submitAuthBtn.textContent   = 'Send Reset Link';
+
+    googleAuthBtn.classList.add('hidden');
+    authDividerRow.classList.add('hidden');
+    passwordBlock.classList.add('hidden');
+    authPassword.required = false;
+    fullNameRow.classList.add('hidden');
+    authName.required = false;
+    rememberMeRow.classList.add('hidden');
+    termsAgreementRow.classList.add('hidden');
+    termsAgreementRow.style.display = '';
+    forgotPasswordLink.classList.add('invisible');
+    recoveryBackRow.classList.remove('hidden');
   }
-  
-  document.getElementById('topToggleBtn')?.addEventListener('click', toggleAuthMode);
-  document.getElementById('bottomToggleBtn')?.addEventListener('click', toggleAuthMode);
 }
 
-// 5. Function to switch card layout directly to Forgot Password Mode
-function enterPasswordRecoveryMode() {
-  isPasswordRecoveryMode = true;
-  
-  desktopTitle.innerText = "Reset your password";
-  desktopSubtitle.innerText = "Enter your registered email and we'll send you a secure recovery link.";
-  mobileTitle.innerText = "Reset Password";
-  mobileSubtitle.innerText = "Get back into your secure active workspace dashboard.";
-  
-  submitAuthBtn.innerText = "Send Reset Link";
-  
-  googleAuthBtn.classList.add('hidden');
-  authDividerRow.classList.add('hidden');
-  fullNameRow.classList.add('hidden');
-  authName.required = false;
-  passwordInputRow.classList.add('hidden');
-  authPassword.required = false;
-  rememberMeRow.classList.add('hidden');
-  forgotPasswordLink.classList.add('invisible');
-  
-  recoveryBackRow.classList.remove('hidden');
-}
+// Stable event listeners — buttons never recreated so no stale reference issue
+topToggleBtn.addEventListener('click',    () => setMode(mode === 'login' ? 'signup' : 'login'));
+bottomToggleBtn.addEventListener('click', () => setMode(mode === 'login' ? 'signup' : 'login'));
+forgotPasswordLink.addEventListener('click', () => setMode('recovery'));
+backToLoginBtn.addEventListener('click',     () => setMode('login'));
 
-// Attach event listeners to toggle views smoothly
-topToggleBtn.addEventListener('click', toggleAuthMode);
-bottomToggleBtn.addEventListener('click', toggleAuthMode);
-forgotPasswordLink.addEventListener('click', enterPasswordRecoveryMode);
-backToLoginBtn.addEventListener('click', () => {
-  isSignUpMode = true; 
-  toggleAuthMode();
+
+// ─── PASSWORD VISIBILITY TOGGLE ──────────────
+
+togglePasswordVisibilityBtn.addEventListener('click', () => {
+  const isHidden = authPassword.type === 'password';
+  authPassword.type = isHidden ? 'text' : 'password';
+  eyeOpenIcon.classList.toggle('hidden', isHidden);
+  eyeClosedIcon.classList.toggle('hidden', !isHidden);
 });
 
-// 💡 EYE TOGGLE CONTROLLER FUNCTIONALITY PLACED HERE CLEANLY
-if (togglePasswordVisibilityBtn && authPassword) {
-  togglePasswordVisibilityBtn.addEventListener('click', () => {
-    if (authPassword.type === 'password') {
-      authPassword.type = 'text';
-      eyeOpenIcon.classList.add('hidden');
-      eyeClosedIcon.classList.remove('hidden');
-    } else {
-      authPassword.type = 'password';
-      eyeOpenIcon.classList.remove('hidden');
-      eyeClosedIcon.classList.add('hidden');
-    }
+
+// ─── INLINE ERROR HELPERS ────────────────────
+
+function showFieldError(el, msg) {
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+
+function clearAllErrors() {
+  formErrorBanner.classList.add('hidden');
+  formErrorBanner.textContent = '';
+  [nameError, emailError, passwordError, termsError].forEach(el => {
+    el.classList.remove('visible');
+  });
+  [authName, authEmail, authPassword].forEach(el => {
+    el.classList.remove('error');
   });
 }
 
-// 6. Core Submission Controller logic
+function showBannerError(msg) {
+  formErrorBanner.textContent = msg;
+  formErrorBanner.classList.remove('hidden');
+  formErrorBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Clear field error on keystroke
+[authName, authEmail, authPassword].forEach(input => {
+  input.addEventListener('input', () => {
+    input.classList.remove('error');
+    // Clear corresponding field error
+    const map = { authName: nameError, authEmail: emailError, authPassword: passwordError };
+    map[input.id]?.classList.remove('visible');
+    formErrorBanner.classList.add('hidden');
+  });
+});
+
+
+// ─── CLIENT-SIDE VALIDATION ──────────────────
+
+function validateForm() {
+  clearAllErrors();
+  let valid = true;
+
+  if (mode === 'signup') {
+    if (!authName.value.trim()) {
+      showFieldError(nameError, 'Please enter your full name.');
+      authName.classList.add('error');
+      valid = false;
+    }
+  }
+
+  if (mode !== 'recovery') {
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRe.test(authEmail.value.trim())) {
+      showFieldError(emailError, 'Please enter a valid email address.');
+      authEmail.classList.add('error');
+      valid = false;
+    }
+    if (authPassword.value.length < 6) {
+      showFieldError(passwordError, 'Password must be at least 6 characters.');
+      authPassword.classList.add('error');
+      valid = false;
+    }
+  } else {
+    // Recovery: only email needed
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRe.test(authEmail.value.trim())) {
+      showFieldError(emailError, 'Please enter a valid email address.');
+      authEmail.classList.add('error');
+      valid = false;
+    }
+  }
+
+  if (mode === 'signup' && !agreeToTerms.checked) {
+    showFieldError(termsError, 'You must agree to the Terms to create an account.');
+    valid = false;
+  }
+
+  return valid;
+}
+
+
+// ─── FIREBASE ERROR MAP ──────────────────────
+
+function getFriendlyError(code) {
+  const map = {
+    'auth/email-already-in-use':  'This email is already registered. Try signing in instead.',
+    'auth/invalid-credential':    'Incorrect email or password. Please check and try again.',
+    'auth/wrong-password':        'Incorrect email or password. Please check and try again.',
+    'auth/user-not-found':        'No account found with that email address.',
+    'auth/weak-password':         'Password is too weak — use at least 6 characters.',
+    'auth/too-many-requests':     'Too many failed attempts. Please wait a few minutes and try again.',
+    'auth/popup-closed-by-user':  'Google sign-in was cancelled. Please try again.',
+    'auth/network-request-failed':'Network error. Please check your connection and retry.',
+  };
+  return map[code] || 'Something went wrong. Please try again.';
+}
+
+
+// ─── SUCCESS MODAL ───────────────────────────
+
+function showSuccess(message, redirectUrl, delayMs = 2500) {
+  modalMessage.textContent = message;
+  // FIX: was "hidden flex" in HTML — now we explicitly set display
+  successModal.classList.remove('hidden');
+  successModal.style.display = 'flex';
+  setTimeout(() => { window.location.href = redirectUrl; }, delayMs);
+}
+
+
+// ─── FORM SUBMISSION ─────────────────────────
+
 authForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  
-  const email = authEmail.value.trim();
-  const password = authPassword.value;
+  if (!validateForm()) return;
+
+  const email       = authEmail.value.trim();
+  const password    = authPassword.value;
   const displayName = authName.value.trim();
 
   submitAuthBtn.disabled = true;
+  const originalLabel = submitAuthBtn.textContent;
 
-  if (isPasswordRecoveryMode) {
-    submitAuthBtn.innerText = "Sending reset link... ⏳";
-    try {
+  try {
+    if (mode === 'recovery') {
+      submitAuthBtn.textContent = 'Sending link...';
       await sendPasswordResetEmail(auth, email);
-      console.log(`Password reset email successfully queued for: ${email}`);
-      showSuccessModal(`Done! A security reset link has been dispatched to ${email}. Please check your spam folder if it doesn't arrive shortly.`, "login.html");
-    } catch (error) {
-      console.error("Password Reset Transmit Error:", error);
-      if (error.code === 'auth/user-not-found') {
-        alert("This email address is not registered on SignAm. Please double check and try again.");
-      } else {
-        alert(`Reset Request Failed: ${error.message}`);
-      }
-      submitAuthBtn.disabled = false;
-      submitAuthBtn.innerText = "Send Reset Link";
-    }
-    return; 
-  }
-
-  if (isSignUpMode) {
-    // Check if the user accepted the legal frameworks first
-    if (!agreeToTerms.checked) {
-      alert("You must agree to SignAm's Terms of Service and Privacy Policy to create an account.");
-      submitAuthBtn.disabled = false;
-      return; // Stop the signup process right here
-    }
-    submitAuthBtn.innerText = "Creating your account...";
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(userCredential.user, { displayName: displayName });
-      showSuccessModal(`Welcome to SignAm, ${displayName}! Account created successfully.`, "home.html");
-    } catch (error) {
-      console.error("Signup Failure:", error);
-      if (error.code === 'auth/email-already-in-use') {
-        alert("This email address is already registered. Please sign in instead.");
-      } else if (error.code === 'auth/weak-password') {
-        alert("Password is too weak. Please use at least 6 characters.");
-      } else {
-        alert(`Signup Error: ${error.message}`);
-      }
-      submitAuthBtn.disabled = false;
-      submitAuthBtn.innerText = "Create My Account →";
-    }
-    
-  } else {
-    submitAuthBtn.innerText = "Authorizing credentials...";
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      showSuccessModal("Welcome back! Opening your workspace dashboard...", "home.html");
-    } catch (error) {
-      console.error("Login Failure:", error);
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
-        alert("Invalid email or password. Please verify your entries and try again.");
-      } else if (error.code === 'auth/too-many-requests') {
-        alert("Too many failed attempts. This device has been temporarily locked.");
-      } else {
-        alert(`Login Error: ${error.message}`);
-      }
-      submitAuthBtn.disabled = false;
-      submitAuthBtn.innerText = "Open My Workspace →";
-    }
-  }
-});
-
-// --- GOOGLE OAUTH SECURITY AUTHENTICATION HANDLER ---
-if (googleAuthBtn) {
-  googleAuthBtn.addEventListener('click', async () => {
-    // If they are signing up, enforce the terms checkbox restriction layer
-    if (isSignUpMode && !agreeToTerms.checked) {
-      alert("You must agree to SignAm's Terms of Service and Privacy Policy to create an account.");
+      showSuccess(`Reset link sent to ${email}. Check your spam folder if it doesn't arrive shortly.`, 'login.html', 4000);
       return;
     }
 
-    googleAuthBtn.disabled = true;
-    const originalText = googleBtnText.innerText;
-    googleBtnText.innerText = "Connecting secure channel...";
-
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      
-      console.log(`Google Authentication verified successfully for user uid: ${user.uid}`);
-      showSuccessModal(`Welcome back, ${user.displayName || 'User'}! Syncing workspace profile...`, "home.html");
-      
-    } catch (error) {
-      console.error("Google Auth Gateway Protocol Failure:", error);
-      
-      // Handle the case where a user closes the popup window manually before completing login
-      if (error.code === 'auth/popup-closed-by-user') {
-        alert("Authentication canceled. The authorization window was closed before completing.");
-      } else {
-        alert(`Google Connection Failed: ${error.message}`);
-      }
-      
-      googleAuthBtn.disabled = false;
-      googleBtnText.innerText = originalText;
+    if (mode === 'signup') {
+      submitAuthBtn.textContent = 'Creating account...';
+      const credential = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(credential.user, { displayName });
+      showSuccess(`Welcome to SignAm, ${displayName}! Account created.`, 'home.html');
+      return;
     }
-  });
-}
 
-function showSuccessModal(message, redirectUrl) {
-  if (modalMessage && successModal) {
-    modalMessage.innerText = message;
-    successModal.classList.remove('hidden'); 
+    // Login
+    submitAuthBtn.textContent = 'Authorizing...';
+
+    // Honor "remember me" — FIX: was collected but never used
+    const persistence = rememberMe.checked ? browserLocalPersistence : browserSessionPersistence;
+    await setPersistence(auth, persistence);
+
+    await signInWithEmailAndPassword(auth, email, password);
+    showSuccess('Welcome back! Opening your workspace...', 'home.html');
+
+  } catch (err) {
+    showBannerError(getFriendlyError(err.code));
+    submitAuthBtn.disabled = false;
+    submitAuthBtn.textContent = originalLabel;
   }
-  setTimeout(() => {
-    window.location.href = redirectUrl;
-  }, 4000); 
-}
+});
+
+
+// ─── GOOGLE OAUTH ────────────────────────────
+
+googleAuthBtn.addEventListener('click', async () => {
+  if (mode === 'signup' && !agreeToTerms.checked) {
+    showFieldError(termsError, 'You must agree to the Terms to create an account.');
+    return;
+  }
+
+  googleAuthBtn.disabled = true;
+  const originalText = googleBtnText.textContent;
+  googleBtnText.textContent = 'Connecting...';
+
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const name = result.user.displayName || 'User';
+    showSuccess(`Welcome, ${name}! Syncing your workspace...`, 'home.html');
+  } catch (err) {
+    showBannerError(getFriendlyError(err.code));
+    googleAuthBtn.disabled = false;
+    googleBtnText.textContent = originalText;
+  }
+});
+
+
+// ─── INIT ────────────────────────────────────
+
+setMode('login');

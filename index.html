@@ -1,348 +1,364 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SignAm — Write agreement down, Sign am</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
-        .serif-font {
-            font-family: 'Playfair Display', serif;
-        }
-        /* The pulsing vertical cursor line effect */
-.typing-cursor::after {
-    content: '|';
-    margin-left: 2px;
-    color: #059669; /* emerald-600 */
-    animation: blink 0.7s infinite steps(2, start);
-}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SignAm — Write agreement down, Sign am</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .serif-font { font-family: 'Playfair Display', serif; }
 
-@keyframes blink {
-    to { opacity: 0; }
-}
-    </style>
+    /* Typing cursor */
+    .typing-cursor::after {
+      content: '|';
+      margin-left: 2px;
+      color: #059669;
+      animation: blink 0.7s infinite steps(2, start);
+    }
+    @keyframes blink { to { opacity: 0; } }
+  </style>
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased selection:bg-emerald-500 selection:text-white">
 
-    <!-- Header Navigation -->
-    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/80">
-        <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-lg shadow-sm shadow-emerald-600/20">S</div>
-                <span class="font-bold text-xl tracking-tight text-slate-900">Sign<span class="text-emerald-600">Am</span></span>
-            </div>
-            <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-                <a href="#how-it-works" class="hover:text-emerald-600 transition-colors">How It Works</a>
-                <a href="#why-signam" class="hover:text-emerald-600 transition-colors">Why Use SignAm?</a>
-                <a href="#pricing" class="hover:text-emerald-600 transition-colors">Pricing</a>
-            </nav>
-            <div>
-                <a href="login.html" class="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-xl transition-all shadow-sm shadow-emerald-600/10">
-                    Start Agreement
-                </a>
-            </div>
+  <!-- ── HEADER ── -->
+  <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/80">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-lg shadow-sm shadow-emerald-600/20">S</div>
+        <span class="font-bold text-xl tracking-tight text-slate-900">Sign<span class="text-emerald-600">Am</span></span>
+      </div>
+      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
+        <a href="#how-it-works" class="hover:text-emerald-600 transition-colors">How It Works</a>
+        <a href="#why-signam"   class="hover:text-emerald-600 transition-colors">Why Use SignAm?</a>
+        <a href="#pricing"      class="hover:text-emerald-600 transition-colors">Pricing</a>
+      </nav>
+      <a href="login.html" class="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-xl transition-all shadow-sm shadow-emerald-600/10">
+        Login
+      </a>
+    </div>
+  </header>
+
+  <!-- ── HERO ── -->
+  <section class="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-28 border-b border-slate-200/60 bg-gradient-to-b from-white to-slate-50/50">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+
+        <!-- Left copy -->
+        <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold tracking-wide uppercase mx-auto lg:mx-0">
+            Made for Nigerians by Nigerians
+          </div>
+
+          <!-- FIX: removed stray second </h1> that was present in original -->
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 tracking-tight leading-[1.15]">
+            <span id="animatedText" class="typing-cursor inline-block min-h-[2.5rem] sm:min-h-[3.5rem] lg:min-h-[4.5rem]"></span>
+            <br class="hidden sm:inline">
+            <span class="text-emerald-600">In 1 minute.</span>
+          </h1>
+
+          <p class="text-base sm:text-lg text-slate-600 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+            Stop doing business by mouth alone to avoid stories. Turn your agreements into real, locked, and legally binding contracts that protect your money.
+          </p>
+
+          <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+            <a href="login.html" class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3.5 text-base font-semibold text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-xl transition-all shadow-md shadow-emerald-600/20 hover:-translate-y-px">
+              Start New Agreement
+            </a>
+            <a href="#how-it-works" class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3.5 text-base font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all">
+              See How It Works
+            </a>
+          </div>
+
+          <div class="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-2 text-xs font-medium text-slate-500">
+            <span class="flex items-center gap-1.5">✓ Valid under Nigerian Law</span>
+            <span class="flex items-center gap-1.5">✓ NIN-backed identity verification</span>
+            <span class="flex items-center gap-1.5">✓ Works perfectly on phone</span>
+          </div>
         </div>
-    </header>
 
-    <!-- Hero Section -->
-    <section class="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-28 border-b border-slate-200/60 bg-gradient-to-b from-white to-slate-50/50">
-        <div class="max-w-6xl mx-auto px-4">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-                
-                <!-- Hero Left Copy -->
-                <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
-                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold tracking-wide uppercase mx-auto lg:mx-0">
-                        Made for Nigerians by Nigerians
-                    </div>
-                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 tracking-tight leading-[1.15]">
-    <span id="animatedText" class="typing-cursor inline-block min-h-[2.5rem] sm:min-h-[3.5rem] lg:min-h-[4.5rem]"></span>
-    <br class="hidden sm:inline">
-    <span class="text-emerald-600">In 1 minute.</span>
-</h1>
-                    </h1>
-                    <p class="text-base sm:text-lg text-slate-600 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                        Stop doing business by mouth alone to avoid stories. Turn your agreements into real, locked, and legally binding contracts that protect your money.
-                    </p>
-                    <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
-                        <a href="login.html" class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3.5 text-base font-semibold text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-xl transition-all shadow-md shadow-emerald-600/20 hover:translate-y-[-1px]">
-                            Start New Agreement
-                        </a>
-                        <a href="#how-it-works" class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3.5 text-base font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all">
-                            See How It Works
-                        </a>
-                    </div>
-                    <div class="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-2 text-xs font-medium text-slate-500">
-                        <span class="flex items-center gap-1.5">✓ Valid under Nigerian Law</span>
-                        <span class="flex items-center gap-1.5">✓ Works perfectly on phone</span>
-                    </div>
-                </div>
-
-                <!-- Hero Right Preview Component -->
-                <div class="lg:col-span-5 relative max-w-sm mx-auto lg:max-w-none w-full">
-                    <div class="absolute inset-0 bg-emerald-500/5 rounded-3xl blur-3xl transform rotate-6 scale-95"></div>
-                    <div class="relative bg-white border border-slate-200 rounded-2xl p-5 shadow-xl shadow-slate-200/50">
-                        <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                            <div class="flex items-center gap-2">
-                                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                <span class="text-xs font-bold tracking-wide text-slate-400 uppercase">Locked Agreement Preview</span>
-                            </div>
-                            <span class="text-[10px] font-mono text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">ID: #SA-7000</span>
-                        </div>
-                        
-                        <!-- Mini Contract Preview Pane -->
-                        <div class="bg-amber-50/20 border border-amber-900/10 rounded-xl p-4 text-xs shadow-inner max-h-[260px] overflow-hidden relative">
-                            <div class="space-y-3 font-serif text-slate-800 serif-font">
-                                <h3 class="font-bold text-center border-b border-slate-200/60 pb-1 text-sm tracking-wide text-slate-900 uppercase">OFFICIAL AGREEMENT</h3>
-                                <p class="text-[11px] leading-relaxed">
-                                    This binds <strong class="text-slate-900 font-semibold">Person A (Sender)</strong> and <strong class="text-slate-900 font-semibold">Person B (Receiver)</strong> under the terms stated below:
-                                </p>
-                                <div class="space-y-1 bg-white/60 p-2 rounded border border-slate-100 font-sans text-[10px]">
-                                    <div class="flex justify-between text-slate-500"><span class="font-medium">Deal Type:</span> <span class="text-slate-800 font-semibold">Business Supply / Loan</span></div>
-                                    <div class="flex justify-between text-slate-500"><span class="font-medium">Total Amount:</span> <span class="text-slate-800 font-semibold">₦150,000.00</span></div>
-                                    <div class="flex justify-between text-slate-500"><span class="font-medium">Payday / Deadline:</span> <span class="text-slate-800 font-semibold">July 15, 2026</span></div>
-                                </div>
-                                <p class="text-[11px] leading-relaxed">
-                                    Both parties agree that no terms can be modified after signature confirmation. This serves as full proof in case of any default.
-                                </p>
-                            </div>
-                            <div class="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent"></div>
-                        </div>
-
-                        <!-- Mini Signatures representation -->
-                        <div class="mt-4 grid grid-cols-2 gap-3 pt-3 border-t border-slate-100 text-[10px]">
-                            <div class="p-2 bg-slate-50 rounded border border-dashed border-slate-200">
-                                <span class="text-slate-400 block mb-1 font-medium">Your Signature:</span>
-                                <span class="font-mono text-emerald-600 font-bold block">SIGNED ✓</span>
-                            </div>
-                            <div class="p-2 bg-emerald-50/50 rounded border border-dashed border-emerald-200 flex flex-col justify-between">
-                                <span class="text-emerald-700 block mb-1 font-semibold">Their Signature:</span>
-                                <span class="text-emerald-600 font-medium block animate-pulse">Waiting for them to sign...</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+        <!-- Right preview card -->
+        <div class="lg:col-span-5 relative max-w-sm mx-auto lg:max-w-none w-full">
+          <div class="absolute inset-0 bg-emerald-500/5 rounded-3xl blur-3xl transform rotate-6 scale-95"></div>
+          <div class="relative bg-white border border-slate-200 rounded-2xl p-5 shadow-xl shadow-slate-200/50">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+              <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                <span class="text-xs font-bold tracking-wide text-slate-400 uppercase">Locked Agreement Preview</span>
+              </div>
+              <span class="text-[10px] font-mono text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">ID: #SA-7000</span>
             </div>
-        </div>
-    </section>
 
-    <!-- How It Works -->
-    <section id="how-it-works" class="py-20 bg-white">
-        <div class="max-w-6xl mx-auto px-4">
-            <div class="text-center max-w-3xl mx-auto space-y-4 mb-16">
-                <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
-                    How SignAm Works
-                </h2>
-                <p class="text-slate-600 text-base">
-                    You don't need any lawyer or expensive computer. Everything runs smoothly straight from your phone's browser.
+            <div class="bg-amber-50/20 border border-amber-900/10 rounded-xl p-4 text-xs shadow-inner max-h-[260px] overflow-hidden relative">
+              <div class="space-y-3 font-serif text-slate-800 serif-font">
+                <h3 class="font-bold text-center border-b border-slate-200/60 pb-1 text-sm tracking-wide text-slate-900 uppercase">OFFICIAL AGREEMENT</h3>
+                <p class="text-[11px] leading-relaxed">
+                  This binds <strong class="text-slate-900 font-semibold">Person A (Sender)</strong> and <strong class="text-slate-900 font-semibold">Person B (Receiver)</strong> under the terms stated below:
                 </p>
+                <div class="space-y-1 bg-white/60 p-2 rounded border border-slate-100 font-sans text-[10px]">
+                  <div class="flex justify-between text-slate-500"><span class="font-medium">Deal Type:</span> <span class="text-slate-800 font-semibold">Business Supply / Loan</span></div>
+                  <div class="flex justify-between text-slate-500"><span class="font-medium">Total Amount:</span> <span class="text-slate-800 font-semibold">₦150,000.00</span></div>
+                  <div class="flex justify-between text-slate-500"><span class="font-medium">Payday / Deadline:</span> <span class="text-slate-800 font-semibold">July 15, 2026</span></div>
+                </div>
+                <p class="text-[11px] leading-relaxed">
+                  Both parties agree that no terms can be modified after signature confirmation. This serves as full proof in case of any default.
+                </p>
+              </div>
+              <div class="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent"></div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start relative">
-                <div class="hidden lg:block absolute left-1/2 top-8 bottom-8 w-[1px] bg-slate-200 transform -translate-x-1/2"></div>
-                
-                <!-- Creator Path -->
-                <div class="space-y-8 bg-slate-50/50 border border-slate-200/60 p-6 sm:p-8 rounded-2xl relative">
-                    <div class="absolute top-4 right-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">YOUR PART</div>
-                    <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2.5">
-                        What You Will Do
-                    </h3>
-                    
-                    <div class="space-y-6">
-                        <div class="flex gap-4">
-                            <div class="w-1.5 bg-slate-900 rounded-full my-1"></div>
-                            <div>
-                                <h4 class="font-semibold text-slate-900 text-sm">1. Type the terms simply</h4>
-                                <p class="text-xs text-slate-600 leading-relaxed mt-0.5">Just enter the details of the deal casually (e.g., who is paying what, and the deadline). No complex legal dictionary needed.</p>
-                            </div>
-                        </div>
-                        <div class="flex gap-4">
-                            <div class="w-1.5 bg-slate-900 rounded-full my-1"></div>
-                            <div>
-                                <h4 class="font-semibold text-slate-900 text-sm">2. Sign with your finger</h4>
-                                <p class="text-xs text-slate-600 leading-relaxed mt-0.5">Draw your signature directly on your mobile screen canvas to make the document formal.</p>
-                            </div>
-                        </div>
-                        <div class="flex gap-4">
-                            <div class="w-1.5 bg-slate-900 rounded-full my-1"></div>
-                            <div>
-                                <h4 class="font-semibold text-slate-900 text-sm">3. Send the link</h4>
-                                <p class="text-xs text-slate-600 leading-relaxed mt-0.5">Click one button to share the secure agreement page directly into your partner's DM.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Signee Path -->
-                <div class="space-y-8 bg-emerald-50/20 border border-emerald-100 p-6 sm:p-8 rounded-2xl relative">
-                    <div class="absolute top-4 right-4 bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">THEIR PART</div>
-                    <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2.5">
-                        What the Other Person Sees
-                    </h3>
-                    
-                    <div class="space-y-6">
-                        <div class="flex gap-4">
-                            <div class="w-1.5 bg-emerald-500 rounded-full my-1"></div>
-                            <div>
-                                <h4 class="font-semibold text-slate-900 text-sm">1. Open the secure link</h4>
-                                <p class="text-xs text-slate-600 leading-relaxed mt-0.5">They open the link. The terms are completely locked, meaning they cannot edit or slip anything past you.</p>
-                            </div>
-                        </div>
-                        <div class="flex gap-4">
-                            <div class="w-1.5 bg-emerald-500 rounded-full my-1"></div>
-                            <div>
-                                <h4 class="font-semibold text-slate-900 text-sm">2. Quick security check</h4>
-                                <p class="text-xs text-slate-600 leading-relaxed mt-0.5">They do a 5-second verification using their phone or Google to confirm their true identity logs.</p>
-                            </div>
-                        </div>
-                        <div class="flex gap-4">
-                            <div class="w-1.5 bg-emerald-500 rounded-full my-1"></div>
-                            <div>
-                                <h4 class="font-semibold text-slate-900 text-sm">3. Sign to seal the agreement</h4>
-                                <p class="text-xs text-slate-600 leading-relaxed mt-0.5">They sign with their finger. Instantly, the contract closes and downloads as a clean PDF for both of you. Deal closed!</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+            <div class="mt-4 grid grid-cols-2 gap-3 pt-3 border-t border-slate-100 text-[10px]">
+              <div class="p-2 bg-slate-50 rounded border border-dashed border-slate-200">
+                <span class="text-slate-400 block mb-1 font-medium">Your Signature:</span>
+                <span class="font-mono text-emerald-600 font-bold block">SIGNED ✓</span>
+              </div>
+              <div class="p-2 bg-emerald-50/50 rounded border border-dashed border-emerald-200">
+                <span class="text-emerald-700 block mb-1 font-semibold">Their Signature:</span>
+                <span class="text-emerald-600 font-medium block animate-pulse">Waiting for them to sign...</span>
+              </div>
             </div>
+          </div>
         </div>
-    </section>
 
-    <!-- Why SignAm Wins -->
-    <section id="why-signam" class="py-20 bg-slate-50 border-t border-b border-slate-200/60">
-        <div class="max-w-6xl mx-auto px-4">
-            <div class="text-center max-w-2xl mx-auto space-y-4 mb-16">
-                <h2 class="text-3xl font-bold tracking-tight text-slate-900">Why Use SignAm Instead of Casual Chats?</h2>
-                <p class="text-slate-600 text-sm">Normal messages can get lost, deleted, or denied. SignAm keeps your business secure.</p>
-            </div>
+      </div>
+    </div>
+  </section>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Point 1 -->
-                <div class="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-3">
-                    <h3 class="font-bold text-slate-900 text-base">Locked Terms (No Changing)</h3>
-                    <p class="text-xs text-slate-600 leading-relaxed">
-                        Once you send the link, the other person cannot edit the price or date sneaky-style. What you wrote is what stays.
-                    </p>
-                </div>
-                <!-- Point 2 -->
-                <div class="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-3">
-                    <h3 class="font-bold text-slate-900 text-base">Real Proof for Court</h3>
-                    <p class="text-xs text-slate-600 leading-relaxed">
-                        Our backend tracks secure time stamps and phone metrics, making the final PDF document valid under the Nigerian Evidence Act if there's an issue.
-                    </p>
-                </div>
-                <!-- Point 3 -->
-                <div class="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-3">
-                    <h3 class="font-bold text-slate-900 text-base">Pure Professional Level</h3>
-                    <p class="text-xs text-slate-600 leading-relaxed">
-                        Sending a formal SignAm link shows the other party that you take your business seriously, forcing them to pay or deliver on time.
-                    </p>
-                </div>
+  <!-- ── HOW IT WORKS ── -->
+  <section id="how-it-works" class="py-20 bg-white">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="text-center max-w-3xl mx-auto space-y-4 mb-16">
+        <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">How SignAm Works</h2>
+        <p class="text-slate-600 text-base">You don't need any lawyer or expensive computer. Everything runs smoothly straight from your phone's browser.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start relative">
+        <div class="hidden lg:block absolute left-1/2 top-8 bottom-8 w-px bg-slate-200 -translate-x-1/2"></div>
+
+        <!-- Your part -->
+        <div class="space-y-8 bg-slate-50/50 border border-slate-200/60 p-6 sm:p-8 rounded-2xl relative">
+          <div class="absolute top-4 right-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">YOUR PART</div>
+          <h3 class="text-xl font-bold text-slate-900">What You Will Do</h3>
+          <div class="space-y-6">
+            <div class="flex gap-4">
+              <div class="w-1.5 bg-slate-900 rounded-full my-1 shrink-0"></div>
+              <div>
+                <h4 class="font-semibold text-slate-900 text-sm">1. Type the terms simply</h4>
+                <p class="text-xs text-slate-600 leading-relaxed mt-0.5">Just enter the details of the deal casually — who is paying what, and the deadline. No legal dictionary needed.</p>
+              </div>
             </div>
+            <div class="flex gap-4">
+              <div class="w-1.5 bg-slate-900 rounded-full my-1 shrink-0"></div>
+              <div>
+                <h4 class="font-semibold text-slate-900 text-sm">2. Sign with your finger</h4>
+                <p class="text-xs text-slate-600 leading-relaxed mt-0.5">Draw your signature directly on your mobile screen to make the document formal.</p>
+              </div>
+            </div>
+            <div class="flex gap-4">
+              <div class="w-1.5 bg-slate-900 rounded-full my-1 shrink-0"></div>
+              <div>
+                <h4 class="font-semibold text-slate-900 text-sm">3. Send the link</h4>
+                <p class="text-xs text-slate-600 leading-relaxed mt-0.5">One button shares the secure agreement page directly into your partner's DM.</p>
+              </div>
+            </div>
+          </div>
         </div>
-    </section>
 
-    <!-- Pricing -->
-    <section id="pricing" class="py-20 bg-white">
-        <div class="max-w-6xl mx-auto px-4">
-            <div class="text-center max-w-2xl mx-auto space-y-4 mb-16">
-                <h2 class="text-3xl font-bold tracking-tight text-slate-900">Simple Pricing</h2>
-                <p class="text-slate-600 text-sm">Free for everyday casual agreements. No hidden charges.</p>
+        <!-- Their part -->
+        <div class="space-y-8 bg-emerald-50/20 border border-emerald-100 p-6 sm:p-8 rounded-2xl relative">
+          <div class="absolute top-4 right-4 bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">THEIR PART</div>
+          <h3 class="text-xl font-bold text-slate-900">What the Other Person Sees</h3>
+          <div class="space-y-6">
+            <div class="flex gap-4">
+              <div class="w-1.5 bg-emerald-500 rounded-full my-1 shrink-0"></div>
+              <div>
+                <h4 class="font-semibold text-slate-900 text-sm">1. Open the secure link</h4>
+                <p class="text-xs text-slate-600 leading-relaxed mt-0.5">They open the link. The terms are completely locked — they cannot edit the price or deadline after the fact.</p>
+              </div>
             </div>
-
-            <div class="max-w-md mx-auto bg-white border-2 border-emerald-600 rounded-3xl p-8 shadow-xl shadow-slate-200/80 relative">
-                <div class="absolute top-0 right-1/2 transform translate-x-1/2 -translate-y-1/2 bg-emerald-600 text-white font-bold tracking-wide uppercase text-[10px] px-3 py-1 rounded-full">
-                    Free Plan
-                </div>
-                <div class="text-center space-y-2 mb-6">
-                    <h3 class="text-xl font-bold text-slate-900">Standard Tier</h3>
-                    <div class="text-4xl font-extrabold text-slate-900">₦0<span class="text-sm font-medium text-slate-400"> / forever</span></div>
-                    <p class="text-xs text-slate-500">Perfect for securing personal deals and quick business supplies.</p>
-                </div>
-                <hr class="border-slate-100 my-4">
-                <ul class="space-y-3 text-xs font-medium text-slate-600 mb-8">
-                    <li class="flex items-center gap-2 text-slate-900">✓ Up to 2 Agreements Every Month</li>
-                    <li class="flex items-center gap-2 text-slate-900">✓ Finger Signature Canvas Access</li>
-                    <li class="flex items-center gap-2 text-slate-900">✓ Quick Share Link Buttons</li>
-                    <li class="flex items-center gap-2 text-slate-900">✓ Clean Downloadable PDF Proof</li>
-                </ul>
-                <a href="login.html" class="block w-full text-center font-semibold text-sm text-white bg-emerald-600 hover:bg-emerald-700 py-3 rounded-xl transition-all shadow-md shadow-emerald-600/10">
-                    Start Now
-                </a>
+            <div class="flex gap-4">
+              <div class="w-1.5 bg-emerald-500 rounded-full my-1 shrink-0"></div>
+              <div>
+                <h4 class="font-semibold text-slate-900 text-sm">2. Identity check</h4>
+                <p class="text-xs text-slate-600 leading-relaxed mt-0.5">They verify their identity via NIN — confirming that the person signing is real and accountable. No anonymous sign-offs.</p>
+              </div>
             </div>
+            <div class="flex gap-4">
+              <div class="w-1.5 bg-emerald-500 rounded-full my-1 shrink-0"></div>
+              <div>
+                <h4 class="font-semibold text-slate-900 text-sm">3. Sign to seal the agreement</h4>
+                <p class="text-xs text-slate-600 leading-relaxed mt-0.5">They sign with their finger. The contract locks instantly and a clean PDF is generated for both parties. Deal closed.</p>
+              </div>
+            </div>
+          </div>
         </div>
-    </section>
 
-    <!-- Footer -->
-    <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
-        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-6 text-xs font-medium">
-            <div class="flex items-center gap-2 text-white">
-                <span class="w-6 h-6 rounded bg-emerald-600 flex items-center justify-center font-bold text-sm">S</span>
-                <span class="font-bold tracking-tight">Sign<span class="text-emerald-500">Am</span></span>
-            </div>
-            <div>
-                &copy; 2026 SignAm Technologies Ltd. All rights reserved.
-            </div>
-            <div class="text-slate-500 text-[11px] text-center sm:text-right">
-                Notice: SignAm provides transactional infrastructure tools and is not a registered law firm practice.
-            </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── WHY SIGNAM ── -->
+  <section id="why-signam" class="py-20 bg-slate-50 border-t border-b border-slate-200/60">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="text-center max-w-2xl mx-auto space-y-4 mb-16">
+        <h2 class="text-3xl font-bold tracking-tight text-slate-900">Why Use SignAm Instead of Casual Chats?</h2>
+        <p class="text-slate-600 text-sm">Normal messages can get lost, deleted, or denied. SignAm keeps your business secure.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-3">
+          <div class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-lg">🔒</div>
+          <h3 class="font-bold text-slate-900 text-base">Locked Terms</h3>
+          <p class="text-xs text-slate-600 leading-relaxed">Once you send the link, the other person cannot edit the price or date. What you wrote is what stays — permanently.</p>
         </div>
-    </footer>
-<script>
-    const textToAnimate = "Turn promises into legal contracts";
-    const targetElement = document.getElementById("animatedText");
-    
-    let charIndex = 0;
-    let isDeleting = false;
-    
-    const typingSpeed = 100;    // Speed when writing forward (milliseconds per letter)
-    const deletingSpeed = 50;   // Speed when deleting backward (faster feels cleaner!)
-    const pauseAtEnd = 2000;    // How long to hold the full sentence before deleting (2 seconds)
-    const pauseBeforeRestart = 500; // How long to stay blank before typing again
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-3">
+          <div class="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-lg">🪪</div>
+          <h3 class="font-bold text-slate-900 text-base">NIN-Verified Identity</h3>
+          <p class="text-xs text-slate-600 leading-relaxed">Optional NIN verification confirms the person signing is real. It turns a "he said, she said" situation into a legally traceable audit trail.</p>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-3">
+          <div class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-lg">⚖️</div>
+          <h3 class="font-bold text-slate-900 text-base">Real Proof for Court</h3>
+          <p class="text-xs text-slate-600 leading-relaxed">Secure timestamps and identity records make the final PDF admissible under the Nigerian Evidence Act 2011 if a dispute arises.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    function handleLoopAnimation() {
-        // Get the current substring based on our index position
-        const currentText = textToAnimate.substring(0, charIndex);
-        targetElement.textContent = currentText;
+  <!-- ── PRICING ── -->
+  <section id="pricing" class="py-20 bg-white">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="text-center max-w-2xl mx-auto space-y-4 mb-16">
+        <h2 class="text-3xl font-bold tracking-tight text-slate-900">Simple Pricing</h2>
+        <p class="text-slate-600 text-sm">Start free. Upgrade when your deals need government-backed legal teeth.</p>
+      </div>
 
-        // Determine next state step speed variation
-        let currentSpeed = isDeleting ? deletingSpeed : typingSpeed;
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
 
-        // If we are typing and haven't hit the end of the string yet
-        if (!isDeleting && charIndex < textToAnimate.length) {
-            charIndex++;
-        } 
-        // If we are deleting and haven't reached an empty string yet
-        else if (isDeleting && charIndex > 0) {
-            charIndex--;
-        } 
-        // If we reached the absolute end of the sentence
-        else if (!isDeleting && charIndex === textToAnimate.length) {
-            isDeleting = true;
-            currentSpeed = pauseAtEnd; // Pause dramatically at the end of the sentence
-        } 
-        // If we have deleted everything back to zero
-        else if (isDeleting && charIndex === 0) {
-            isDeleting = false;
-            currentSpeed = pauseBeforeRestart; // Pause briefly on blank before typing again
+        <!-- Free tier -->
+        <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm space-y-6 relative">
+          <div>
+            <h3 class="text-lg font-bold text-slate-900">Standard</h3>
+            <div class="text-4xl font-extrabold text-slate-900 mt-1">₦0 <span class="text-sm font-medium text-slate-400">/ forever</span></div>
+            <p class="text-xs text-slate-500 mt-1">For quick personal deals and casual business agreements.</p>
+          </div>
+          <hr class="border-slate-100">
+          <ul class="space-y-3 text-xs font-medium text-slate-700">
+            <li class="flex items-center gap-2">✓ Up to 2 agreements per month</li>
+            <li class="flex items-center gap-2">✓ Finger signature canvas</li>
+            <li class="flex items-center gap-2">✓ Shareable agreement link</li>
+            <li class="flex items-center gap-2">✓ Downloadable PDF proof</li>
+            <li class="flex items-center gap-2 text-slate-400">✗ NIN identity verification</li>
+            <li class="flex items-center gap-2 text-slate-400">✗ Certificate of authenticity</li>
+          </ul>
+          <a href="login.html" class="block w-full text-center font-semibold text-sm text-slate-700 bg-slate-100 hover:bg-slate-200 py-3 rounded-xl transition-all">
+            Get Started Free
+          </a>
+        </div>
+
+        <!-- Pro tier -->
+        <div class="bg-white border-2 border-emerald-600 rounded-3xl p-8 shadow-xl shadow-emerald-600/10 space-y-6 relative">
+          <div class="absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2 bg-emerald-600 text-white font-bold tracking-wide uppercase text-[10px] px-3 py-1 rounded-full whitespace-nowrap">
+            Most Secure
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-slate-900">Verified</h3>
+            <div class="text-4xl font-extrabold text-slate-900 mt-1">₦700 <span class="text-sm font-medium text-slate-400">/ agreement</span></div>
+            <p class="text-xs text-slate-500 mt-1">For agreements where the money is serious and accountability matters.</p>
+          </div>
+          <hr class="border-slate-100">
+          <ul class="space-y-3 text-xs font-medium text-slate-700">
+            <li class="flex items-center gap-2">✓ Everything in Standard</li>
+            <li class="flex items-center gap-2 font-semibold text-slate-900">✓ NIN identity verification</li>
+            <li class="flex items-center gap-2 font-semibold text-slate-900">✓ Certificate of authenticity</li>
+            <li class="flex items-center gap-2 font-semibold text-slate-900">✓ Immutable read-only vault link</li>
+            <li class="flex items-center gap-2 font-semibold text-slate-900">✓ Government-backed audit trail</li>
+          </ul>
+          <a href="login.html" class="block w-full text-center font-bold text-sm text-white bg-emerald-600 hover:bg-emerald-700 py-3 rounded-xl transition-all shadow-md shadow-emerald-600/10">
+            Start Verified Agreement →
+          </a>
+        </div>
+
+      </div>
+
+      <p class="text-center text-xs text-slate-400 mt-8">₦700 is charged per agreement at the verification step — only if you choose to verify. No subscriptions, no surprises.</p>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-6 text-xs font-medium">
+      <div class="flex items-center gap-2 text-white">
+        <span class="w-6 h-6 rounded bg-emerald-600 flex items-center justify-center font-bold text-sm">S</span>
+        <span class="font-bold tracking-tight">Sign<span class="text-emerald-500">Am</span></span>
+      </div>
+      <div>&copy; 2026 SignAm Technologies Ltd. All rights reserved.</div>
+      <div class="text-slate-500 text-[11px] text-center sm:text-right">
+        Notice: SignAm provides transactional infrastructure tools and is not a registered law firm practice.
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ── TYPING ANIMATION ──
+    // FIX: original logic had a race condition where the "pause at end" branch
+    // could never fire because charIndex was already incremented past .length
+    // in the same tick. Rewritten with clear state machine: type → pause → delete → pause → repeat.
+
+    const phrases = [
+      "Turn promises into legal contracts",
+      "Stop doing business by mouth alone",
+      "Seal the deal before stories start",
+    ];
+
+    const el           = document.getElementById('animatedText');
+    const TYPE_SPEED   = 75;
+    const DELETE_SPEED = 40;
+    const PAUSE_END    = 2200;
+    const PAUSE_START  = 400;
+
+    let phraseIndex = 0;
+    let charIndex   = 0;
+    let state       = 'typing'; // 'typing' | 'pause-end' | 'deleting' | 'pause-start'
+
+    function tick() {
+      const phrase = phrases[phraseIndex];
+
+      if (state === 'typing') {
+        charIndex++;
+        el.textContent = phrase.substring(0, charIndex);
+        if (charIndex === phrase.length) {
+          state = 'pause-end';
+          setTimeout(tick, PAUSE_END);
+        } else {
+          setTimeout(tick, TYPE_SPEED);
         }
 
-        // Recursively trigger the loop with the configured speed cadence
-        setTimeout(handleLoopAnimation, currentSpeed);
+      } else if (state === 'pause-end') {
+        state = 'deleting';
+        setTimeout(tick, DELETE_SPEED);
+
+      } else if (state === 'deleting') {
+        charIndex--;
+        el.textContent = phrase.substring(0, charIndex);
+        if (charIndex === 0) {
+          state = 'pause-start';
+          phraseIndex = (phraseIndex + 1) % phrases.length;
+          setTimeout(tick, PAUSE_START);
+        } else {
+          setTimeout(tick, DELETE_SPEED);
+        }
+
+      } else if (state === 'pause-start') {
+        state = 'typing';
+        setTimeout(tick, TYPE_SPEED);
+      }
     }
 
-    // Initialize animation engine on page mount loading
-    window.addEventListener("DOMContentLoaded", () => {
-        setTimeout(handleLoopAnimation, 600);
-    });
-</script>
+    window.addEventListener('DOMContentLoaded', () => setTimeout(tick, 600));
+  </script>
 </body>
 </html>
