@@ -82,6 +82,24 @@
 
     <!-- Identity Authentication Form -->
     <form id="authForm" onsubmit="event.preventDefault();" class="space-y-4 pt-2">
+
+      <!-- Google Auth Action Trigger -->
+      <div class="mb-4">
+        <button type="button" id="googleAuthBtn" class="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold py-3 px-4 rounded-xl transition shadow-sm text-sm cursor-pointer focus:outline-none">
+          <!-- Google G Icon Graphic -->
+          <svg class="w-5 h-5" viewBox="0 0 24 24">
+            <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.866-3.577-7.866-8s3.536-8 7.866-8c2.46 0 4.105 1.025 5.047 1.926l3.227-3.227C18.207 1.637 15.42.75 12.24.75c-6.215 0-11.25 5.035-11.25 11.25s5.035 11.25 11.25 11.25c6.486 0 10.795-4.56 10.795-10.99 0-.74-.08-1.305-.175-1.975H12.24Z"/>
+          </svg>
+          <span id="googleBtnText">Continue with Google</span>
+        </button>
+      </div>
+
+      <!-- Structural Content Divider -->
+      <div id="authDividerRow" class="flex items-center my-4">
+        <div class="flex-grow border-t border-slate-100"></div>
+        <span class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">or use email</span>
+        <div class="flex-grow border-t border-slate-100"></div>
+      </div>
       
       <!-- Full Name Input Field Row (Hidden by default, shows up only for Sign Up) -->
       <div id="fullNameRow" class="hidden">

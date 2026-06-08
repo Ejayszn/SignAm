@@ -5,7 +5,9 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  GoogleAuthProvider,
+  signInWithPopup
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
 // 2. Your project application's configuration keys 
@@ -65,12 +67,20 @@ const topToggleText = document.getElementById('topToggleText');
 const topToggleBtn = document.getElementById('topToggleBtn');
 const bottomToggleText = document.getElementById('bottomToggleText');
 const bottomToggleBtn = document.getElementById('bottomToggleBtn');
+const googleAuthBtn = document.getElementById('googleAuthBtn');
+const googleBtnText = document.getElementById('googleBtnText');
+const authDividerRow = document.getElementById('authDividerRow');
+
+// Initialize Google Auth Provider
+const googleProvider = new GoogleAuthProvider();
 
 // 4. Function to change layout fluidly between Login, Sign Up, and Password Reset states
 function toggleAuthMode() {
   isSignUpMode = !isSignUpMode;
   isPasswordRecoveryMode = false; 
   
+  googleAuthBtn.classList.remove('hidden');
+  authDividerRow.classList.remove('hidden');
   passwordInputRow.classList.remove('hidden');
   authPassword.required = true;
   recoveryBackRow.classList.add('hidden');
@@ -93,6 +103,7 @@ function toggleAuthMode() {
     
     topToggleText.innerHTML = `Already have an account? <button type="button" id="topToggleBtn" class="text-emerald-600 font-bold hover:underline ml-1">Sign in</button>`;
     bottomToggleText.innerHTML = `Already have an account? <button type="button" id="bottomToggleBtn" class="text-emerald-600 font-bold hover:underline ml-0.5">Sign in</button>`;
+    googleBtnText.innerText = "Sign up with Google";
   } else {
     desktopTitle.innerText = "Welcome back";
     desktopSubtitle.innerText = "Enter your credentials below to open your workspace dashboard.";
@@ -111,6 +122,7 @@ function toggleAuthMode() {
     
     topToggleText.innerHTML = `New to SignAm? <button type="button" id="topToggleBtn" class="text-emerald-600 font-bold hover:underline ml-1">Create an account</button>`;
     bottomToggleText.innerHTML = `New to SignAm? <button type="button" id="bottomToggleBtn" class="text-emerald-600 font-bold hover:underline ml-0.5">Create an account</button>`;
+    googleBtnText.innerText = "Continue with Google";
   }
   
   document.getElementById('topToggleBtn')?.addEventListener('click', toggleAuthMode);
@@ -128,6 +140,8 @@ function enterPasswordRecoveryMode() {
   
   submitAuthBtn.innerText = "Send Reset Link";
   
+  googleAuthBtn.classList.add('hidden');
+  authDividerRow.classList.add('hidden');
   fullNameRow.classList.add('hidden');
   authName.required = false;
   passwordInputRow.classList.add('hidden');
@@ -235,6 +249,42 @@ authForm.addEventListener('submit', async (e) => {
     }
   }
 });
+
+// --- GOOGLE OAUTH SECURITY AUTHENTICATION HANDLER ---
+if (googleAuthBtn) {
+  googleAuthBtn.addEventListener('click', async () => {
+    // If they are signing up, enforce the terms checkbox restriction layer
+    if (isSignUpMode && !agreeToTerms.checked) {
+      alert("You must agree to SignAm's Terms of Service and Privacy Policy to create an account.");
+      return;
+    }
+
+    googleAuthBtn.disabled = true;
+    const originalText = googleBtnText.innerText;
+    googleBtnText.innerText = "Connecting secure channel...";
+
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      
+      console.log(`Google Authentication verified successfully for user uid: ${user.uid}`);
+      showSuccessModal(`Welcome back, ${user.displayName || 'User'}! Syncing workspace profile...`, "home.html");
+      
+    } catch (error) {
+      console.error("Google Auth Gateway Protocol Failure:", error);
+      
+      // Handle the case where a user closes the popup window manually before completing login
+      if (error.code === 'auth/popup-closed-by-user') {
+        alert("Authentication canceled. The authorization window was closed before completing.");
+      } else {
+        alert(`Google Connection Failed: ${error.message}`);
+      }
+      
+      googleAuthBtn.disabled = false;
+      googleBtnText.innerText = originalText;
+    }
+  });
+}
 
 function showSuccessModal(message, redirectUrl) {
   if (modalMessage && successModal) {
