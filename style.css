@@ -1,0 +1,17 @@
+/* Fix mobile elastic scrolling artifacts */
+html, body {
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Document layout paper styling mimicking standard premium legal stock sheets */
+.document-preview-paper {
+  font-family: 'Garamond', 'Georgia', serif;
+  background-image: linear-gradient(#fcfcfc 0.1rem, transparent 0.1rem);
+  background-size: 100% 1.5rem;
+}
+
+/* Custom CSS rule for seamless canvas touch mechanics tracking */
+.touch-none {
+  touch-action: none;
+}

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SignAm — Review & Sign Agreement</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .serif-font { font-family: 'Playfair Display', serif; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased min-h-screen pb-12">
+
+  <header class="bg-white border-b border-slate-200 px-4 py-3 mb-6 flex justify-between items-center shadow-sm">
+    <div class="flex items-center gap-2 mx-auto sm:mx-0">
+      <div class="w-7 h-7 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-base shadow-sm">S</div>
+      <span class="font-bold text-lg tracking-tight">Sign<span class="text-emerald-600">Am</span></span>
+    </div>
+  </header>
+
+  <main class="max-w-xl mx-auto px-4 space-y-6">
+    
+    <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex gap-3 items-start shadow-sm">
+      <span class="text-xl">📩</span>
+      <div>
+        <h2 class="text-sm font-bold text-emerald-950">Agreement Signature Request</h2>
+        <p class="text-xs text-emerald-700 mt-0.5"><span id="inviterName" class="font-bold">Emmanuel Oguibe</span> created this official draft and requested your signature review.</p>
+      </div>
+    </div>
+
+    <section class="bg-white p-6 sm:p-8 border border-slate-300 rounded-xl shadow-md space-y-6">
+      <div class="text-center space-y-1 border-b border-slate-200 pb-4">
+        <h1 class="text-base font-bold uppercase tracking-wider font-serif serif-font text-slate-900">Memorandum of Understanding</h1>
+        <p class="text-slate-400 font-mono text-[9px]">DOCUMENT ID: <span id="docIdDisplay" class="font-bold">SIG-8392A83F</span></p>
+      </div>
+
+      <div class="space-y-2">
+        <p class="font-bold border-b border-slate-100 pb-0.5 text-slate-900 font-mono text-[10px] tracking-wide uppercase">1. PARTIES INVOLVED</p>
+        <div id="partiesList" class="space-y-1 text-xs text-slate-700 pl-1">
+          <p><strong>Party A (Creator):</strong> Emmanuel Oguibe</p>
+          <p><strong>Party B:</strong> Alhaji Musa Bello</p>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <p class="font-bold border-b border-slate-100 pb-0.5 text-slate-900 font-mono text-[10px] tracking-wide uppercase">2. AGREED TERMS & COVENANTS</p>
+        <p id="displayTerms" class="text-slate-800 font-medium bg-slate-50 p-3.5 rounded-xl border border-slate-200/60 leading-relaxed text-xs italic">
+          I am giving Musa 150,000 Naira today to buy market supply. He promises to pay me back completely on or before July 15th, 2026. If he doesn't pay, I will collect his remaining shop goods.
+        </p>
+      </div>
+
+      <div class="space-y-3">
+        <p class="font-bold border-b border-slate-100 pb-0.5 text-slate-900 font-mono text-[10px] tracking-wide uppercase">3. SIGNATURE REGISTRATION STATUS</p>
+        <div id="signaturesGrid" class="grid grid-cols-2 gap-4 pt-1">
+          
+          <div class="space-y-1">
+            <p class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Emmanuel Oguibe</p>
+            <div class="h-14 w-full border border-slate-200 bg-emerald-50/20 rounded-xl flex items-center justify-center p-1">
+              <span class="text-[10px] font-bold text-emerald-700 px-2 py-0.5 bg-emerald-100/50 rounded border border-emerald-200">✍️ SIGNED</span>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <p class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Alhaji Musa Bello</p>
+            <div id="receiverSigPlaceholder" class="h-14 w-full border border-dashed border-amber-300 bg-amber-50/30 rounded-xl flex items-center justify-center text-center">
+              <span class="text-[9px] text-amber-700 font-semibold tracking-tight">Awaiting Your Action</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <section id="actionZone" class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+      
+      <div id="verificationPhase" class="space-y-3">
+        <div>
+          <h3 class="text-sm font-bold text-slate-900">Verify your identity to unlock signing box</h3>
+          <p class="text-xs text-slate-500 mt-0.5">Enter the WhatsApp number where you received this link.</p>
+        </div>
+        <div class="flex gap-2">
+          <input type="tel" id="verifyPhone" placeholder="e.g., 09087654321" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 bg-slate-50 text-sm font-medium">
+          <button type="button" id="verifyPhoneBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 rounded-xl text-xs transition">Verify</button>
+        </div>
+      </div>
+
+      <div id="signingPhase" class="hidden space-y-4">
+        <div class="border-t border-slate-100 pt-2">
+          <h3 class="text-sm font-bold text-slate-900">Sign with your finger inside the box</h3>
+          <p class="text-xs text-slate-500 mt-0.5">By signing below, you fully agree to the terms listed in the document above.</p>
+        </div>
+
+        <div class="relative w-full h-40 bg-slate-50 rounded-xl border-2 border-dashed border-slate-300 overflow-hidden shadow-inner">
+          <canvas id="receiverCanvas" class="w-full h-full touch-none cursor-crosshair"></canvas>
+        </div>
+
+        <div class="flex justify-between items-center">
+          <button type="button" id="clearReceiverCanvasBtn" class="text-xs font-bold text-red-500 hover:text-red-600 transition-colors">🗑️ Clear Ink</button>
+          <button type="button" id="submitSignatureBtn" class="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold py-2.5 px-6 rounded-xl shadow-sm text-xs transition-all">
+            Confirm & Append Signature 🟢
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <script src="sign.js"></script>
+</body>
+</html>
