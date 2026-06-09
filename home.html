@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SignAm Workspace — Create Agreement</title>
+  <title>SignAm — Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,14 +12,7 @@
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
     .serif-font { font-family: 'Playfair Display', serif; }
 
-    .form-step {
-      animation: stepIn 0.22s ease forwards;
-    }
-    @keyframes stepIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
+    /* Field */
     .field {
       width: 100%;
       padding: 0.625rem 1rem;
@@ -42,7 +35,14 @@
       box-shadow: 0 0 0 3px rgba(248,113,113,0.1);
     }
 
-    /* Modal shared */
+    /* Step animation */
+    .form-step { animation: stepIn 0.22s ease forwards; }
+    @keyframes stepIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Modal */
     .modal-wrap {
       display: none;
       position: fixed;
@@ -51,6 +51,7 @@
       align-items: center;
       justify-content: center;
       padding: 1rem;
+      overflow-y: auto;
     }
     .modal-wrap.open { display: flex; }
 
@@ -60,33 +61,42 @@
     }
     .modal-card { animation: popIn 0.2s ease forwards; }
 
-    /* NIN input loading spinner */
+    /* Spinner */
     @keyframes spin { to { transform: rotate(360deg); } }
     .spin { animation: spin 0.8s linear infinite; }
 
-    /* Verification status badge pulse */
+    /* NIN verified badge pulse */
     @keyframes verifiedPulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(5,150,105,0.4); }
-      50%       { box-shadow: 0 0 0 6px rgba(5,150,105,0); }
+      0%,100% { box-shadow: 0 0 0 0 rgba(5,150,105,0.4); }
+      50%      { box-shadow: 0 0 0 6px rgba(5,150,105,0); }
     }
     .verified-pulse { animation: verifiedPulse 1.2s ease 2; }
 
-    #toast {
-      transition: opacity 0.3s, transform 0.3s;
-    }
-    #toast.hidden {
-      opacity: 0;
-      transform: translateY(8px);
-      pointer-events: none;
+    /* Toast */
+    #toast { transition: opacity 0.3s, transform 0.3s; }
+    #toast.hidden { opacity: 0; transform: translateY(8px); pointer-events: none; }
+
+    /* Agreement card hover */
+    .agreement-card { transition: box-shadow 0.15s, transform 0.15s; }
+    .agreement-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); transform: translateY(-1px); }
+
+    /* Theme previews */
+    .theme-btn { transition: all 0.15s; }
+    .theme-btn.selected { ring: 2px; }
+
+    /* Logo upload drag state */
+    .logo-upload-zone.drag-over {
+      border-color: #059669;
+      background: #f0fdf4;
     }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-900 antialiased">
+<body class="bg-slate-50 text-slate-900 antialiased min-h-screen">
 
   <!-- ── HEADER ── -->
   <header class="bg-white border-b border-slate-200 sticky top-0 z-50 px-4 py-3 flex justify-between items-center">
     <div class="flex items-center gap-2">
-      <a href="home.html" class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">S</a>
+      <div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-lg shadow-sm">S</div>
       <span class="font-bold text-xl tracking-tight">Sign<span class="text-emerald-600">Am</span></span>
     </div>
     <div class="flex items-center gap-3">
@@ -94,342 +104,381 @@
         <div id="avatarContainer" class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center justify-center border border-emerald-200 overflow-hidden shadow-sm"></div>
         <span id="userNameText" class="text-xs font-semibold text-slate-700 hidden sm:inline-block"></span>
       </div>
+      <!-- NIN verified pill — shown once user is verified -->
+      <div id="ninVerifiedPill" style="display:none;" class="items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+        🪪 Verified
+      </div>
       <button id="authStatusBtn" class="text-xs font-semibold px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-600 transition-all">
         Log out
       </button>
     </div>
   </header>
 
-  <!-- ── MAIN ── -->
-  <main class="max-w-6xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+  <!-- ── DASHBOARD ── -->
+  <main class="max-w-4xl mx-auto px-4 py-8 space-y-8">
 
-    <!-- LEFT: Form -->
-    <section class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm">
-
-      <div class="w-full bg-slate-100 h-1.5 rounded-full mb-1.5 overflow-hidden">
-        <div id="progressBar" class="bg-emerald-600 h-full transition-all duration-300" style="width:25%"></div>
+    <!-- Welcome + Create button -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Your Agreements</h1>
+        <p class="text-sm text-slate-500 mt-0.5">All your active and completed contracts in one place.</p>
       </div>
-      <p id="stepLabel" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-5">Step 1 of 4</p>
+      <button id="createAgreementBtn"
+        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition-all shrink-0">
+        ➕ Create New Agreement
+      </button>
+    </div>
 
-      <form id="agreementForm" onsubmit="event.preventDefault();">
-
-        <!-- ── STEP 1: Parties ── -->
-        <div id="step1" class="form-step space-y-5">
-          <div>
-            <h2 class="text-xl font-bold tracking-tight text-slate-900">Who is doing this business?</h2>
-            <p class="text-xs text-slate-500 mt-1">Enter full legal names for the contract. Add more parties if needed.</p>
-          </div>
-
-          <div id="partiesContainer" class="space-y-4">
-            <div class="space-y-3 border-l-2 border-emerald-500 pl-3">
-              <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-700">Your Details (Party A — Creator)</h3>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <input type="text" id="creatorName" placeholder="Your Full Name / Company Name" class="field party-name" required autocomplete="name">
-                <input type="tel"  id="creatorPhone" placeholder="Your WhatsApp Number" class="field party-phone" required autocomplete="tel">
-              </div>
-              <input type="email" id="creatorEmail" placeholder="Your Email Address (for document delivery)" class="field" required autocomplete="email">
-            </div>
-            <div class="space-y-3 border-l-2 border-slate-300 pl-3 pt-2">
-              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Partner Details (Party B)</h3>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <input type="text" placeholder="Their Full Name / Company Name" class="field party-name" required>
-                <input type="tel"  placeholder="Their WhatsApp Number"          class="field party-phone" required>
-              </div>
-            </div>
-          </div>
-
-          <button type="button" id="addPartyBtn"
-            class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-2 rounded-xl transition-all">
-            ➕ Add Another Person to this Deal
-          </button>
-        </div>
-
-        <!-- ── STEP 2: Terms ── -->
-        <div id="step2" class="form-step hidden space-y-5">
-          <div>
-            <h2 class="text-xl font-bold tracking-tight text-slate-900">What did you people agree on?</h2>
-            <p class="text-xs text-slate-500 mt-1">Write it how you discussed it. Our AI will shape it into proper legal terms.</p>
-          </div>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Agreement Type</label>
-              <select id="agreementType" class="field">
-                <option value="peer_loan">Money Loan / Borrowing</option>
-                <option value="freelance">Freelance Job / Service Delivery</option>
-                <option value="item_rental">Item Rental / Equipment Hire</option>
-                <option value="business_supply">Business Supply / Goods Delivery</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                Write the terms simply <span class="normal-case font-normal text-slate-400">(be clear about amounts & dates)</span>
-              </label>
-              <textarea id="rawTerms" rows="5" required
-                placeholder="e.g., I am giving Tunde ₦50,000 today to buy goods. He promises to pay me back completely on or before July 15th, 2026. If he doesn't pay, he will clear my shop inventory."
-                class="field resize-none leading-relaxed"></textarea>
-              <!-- AI polish button — wired to Groq later -->
-              <button type="button" id="aiPolishBtn"
-                class="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-violet-600 hover:text-violet-700 bg-violet-50 hover:bg-violet-100 px-3 py-2 rounded-xl transition-all">
-                ✨ Polish with AI
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- ── STEP 3: Verification Crossroads ── -->
-        <div id="step3" class="form-step hidden space-y-5">
-          <div>
-            <h2 class="text-xl font-bold tracking-tight text-slate-900">How secure do you want this?</h2>
-            <p class="text-xs text-slate-500 mt-1">Choose your protection level. This decision affects how enforceable your contract is.</p>
-          </div>
-
-          <!-- Verified option -->
-          <button type="button" id="chooseVerifyBtn"
-            class="w-full text-left p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50/60 hover:bg-emerald-50 transition-all space-y-1.5 group">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <span class="text-lg">🪪</span>
-                <span class="text-sm font-bold text-slate-900">Verify My Identity</span>
-              </div>
-              <span class="text-xs font-bold text-white bg-emerald-600 px-2.5 py-1 rounded-full">₦700</span>
-            </div>
-            <p class="text-xs text-slate-600 leading-relaxed pl-7">
-              Your NIN is verified against your name. The agreement gets a government-backed certificate of authenticity — significantly stronger in a dispute.
-            </p>
-            <p class="text-[10px] font-bold text-emerald-700 pl-7 flex items-center gap-1">
-              ✓ Recommended &nbsp;·&nbsp; ✓ Admissible under Nigerian Evidence Act 2011
-            </p>
-          </button>
-
-          <!-- Skip option -->
-          <button type="button" id="chooseSkipBtn"
-            class="w-full text-left p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 transition-all space-y-1.5">
-            <div class="flex items-center gap-2">
-              <span class="text-lg">📄</span>
-              <span class="text-sm font-semibold text-slate-600">Skip Verification — Use Basic Draft</span>
-            </div>
-            <p class="text-xs text-slate-500 leading-relaxed pl-7">
-              Free, but the document has no identity audit. Harder to enforce if the other party disputes.
-            </p>
-          </button>
-        </div>
-
-        <!-- ── STEP 4: Signature ── -->
-        <div id="step4" class="form-step hidden space-y-5">
-          <div class="flex items-start gap-3">
-            <div class="space-y-0.5">
-              <h2 class="text-xl font-bold tracking-tight text-slate-900">Sign with your finger</h2>
-              <p class="text-xs text-slate-500">Draw your signature to authorize these terms.</p>
-            </div>
-            <!-- Verification badge — shown/hidden by JS -->
-            <div id="verifiedBadge" class="hidden ml-auto shrink-0 flex items-center gap-1.5 bg-emerald-100 border border-emerald-300 text-emerald-800 text-[10px] font-bold px-2.5 py-1.5 rounded-full verified-pulse">
-              🪪 NIN Verified
-            </div>
-          </div>
-
-          <div class="relative w-full h-48 bg-slate-50 rounded-xl border-2 border-dashed border-slate-300 overflow-hidden shadow-inner">
-            <canvas id="signatureCanvas" class="w-full h-full touch-none cursor-crosshair"></canvas>
-            <p id="canvasHint" class="absolute inset-0 flex items-center justify-center text-xs text-slate-400 pointer-events-none select-none font-medium">
-              ✍️ Sign here
-            </p>
-          </div>
-
-          <div class="flex justify-end">
-            <button type="button" id="clearCanvasBtn"
-              class="text-xs font-bold text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-xl transition-colors">
-              🗑️ Clear Signature
-            </button>
-          </div>
-        </div>
-
-        <!-- Nav -->
-        <div class="flex justify-between items-center mt-8 pt-4 border-t border-slate-100">
-          <button type="button" id="prevBtn"
-            class="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-all invisible">
-            ← Back
-          </button>
-          <button type="button" id="nextBtn"
-            class="px-6 py-2.5 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition-all">
-            Continue →
-          </button>
-        </div>
-
-      </form>
-    </section>
-
-    <!-- RIGHT: Live Preview -->
-    <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-4 lg:sticky lg:top-24">
-      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Live Document Preview</h3>
-        <div class="flex items-center gap-2">
-          <span id="previewVerifiedTag" class="hidden text-[10px] font-bold px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md">NIN Verified</span>
-          <span class="text-[10px] font-bold px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-md">Draft</span>
-        </div>
+    <!-- Stats row -->
+    <div class="grid grid-cols-3 gap-4">
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 text-center shadow-sm">
+        <p id="statTotal" class="text-2xl font-extrabold text-slate-900">—</p>
+        <p class="text-xs text-slate-500 mt-0.5 font-medium">Total</p>
       </div>
-
-      <div class="bg-white p-6 border border-slate-200 shadow-inner rounded-xl space-y-5 overflow-y-auto max-h-[440px] text-xs leading-relaxed text-slate-800">
-        <div class="text-center space-y-1 border-b border-slate-200 pb-3">
-          <h1 class="text-sm font-bold uppercase tracking-widest serif-font text-slate-900">Memorandum of Understanding</h1>
-          <p class="text-slate-400 font-mono text-[9px]">DOCUMENT ID: PENDING GENERATION</p>
-        </div>
-
-        <div class="space-y-1.5">
-          <p class="font-bold text-slate-900 font-mono text-[10px] tracking-widest uppercase border-b border-slate-100 pb-1">1. Parties Involved</p>
-          <p id="previewParties">
-            This agreement is entered into between
-            <span class="font-semibold underline text-slate-900 bg-slate-50 px-1 rounded">[Party A Name]</span>
-            and
-            <span class="font-semibold underline text-slate-900 bg-slate-50 px-1 rounded">[Party B Name]</span>.
-          </p>
-        </div>
-
-        <div class="space-y-1.5">
-          <p class="font-bold text-slate-900 font-mono text-[10px] tracking-widest uppercase border-b border-slate-100 pb-1">2. Agreed Terms & Covenants</p>
-          <p id="previewTerms" class="text-slate-500 italic bg-slate-50 p-2.5 rounded-xl border border-slate-100 leading-relaxed">
-            Start typing what you both agreed on — watch it update here in real time...
-          </p>
-        </div>
-
-        <!-- Verification section — shown only when NIN verified -->
-        <div id="previewVerificationSection" class="hidden space-y-1.5">
-          <p class="font-bold text-slate-900 font-mono text-[10px] tracking-widest uppercase border-b border-slate-100 pb-1">3. Identity Verification</p>
-          <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 space-y-1">
-            <p class="text-emerald-800 font-semibold">✓ NIN Verified — Certificate of Authenticity Issued</p>
-            <p class="text-emerald-700 text-[10px]">Creator identity confirmed via government NIN database. Audit trail secured.</p>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4 pt-4 border-t border-dashed border-slate-200">
-          <div class="space-y-1.5">
-            <p class="text-[9px] text-slate-400 uppercase font-bold tracking-wider">First Party Signature</p>
-            <div class="h-14 border border-slate-200 bg-slate-50 rounded-xl flex items-center justify-center overflow-hidden p-1">
-              <img id="previewSigImage" class="max-h-full max-w-full hidden object-contain" alt="Signature">
-              <span id="previewSigPlaceholder" class="text-[9px] text-slate-400 italic">Pending</span>
-            </div>
-          </div>
-          <div class="space-y-1.5">
-            <p class="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Second Party Signature</p>
-            <div class="h-14 border border-slate-100 bg-slate-50 rounded-xl flex items-center justify-center text-center px-2">
-              <span class="text-[9px] text-slate-400 italic">Awaiting partner link</span>
-            </div>
-          </div>
-        </div>
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 text-center shadow-sm">
+        <p id="statPending" class="text-2xl font-extrabold text-amber-600">—</p>
+        <p class="text-xs text-slate-500 mt-0.5 font-medium">Pending</p>
       </div>
-    </section>
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 text-center shadow-sm">
+        <p id="statCompleted" class="text-2xl font-extrabold text-emerald-600">—</p>
+        <p class="text-xs text-slate-500 mt-0.5 font-medium">Completed</p>
+      </div>
+    </div>
+
+    <!-- Agreements list -->
+    <div id="agreementsList" class="space-y-3">
+      <!-- Skeleton loaders shown while fetching -->
+      <div class="skeleton-loader bg-white rounded-2xl border border-slate-200 p-5 animate-pulse h-20"></div>
+      <div class="skeleton-loader bg-white rounded-2xl border border-slate-200 p-5 animate-pulse h-20"></div>
+    </div>
+
+    <!-- Empty state (hidden by default) -->
+    <div id="emptyState" class="hidden bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3 shadow-sm">
+      <h3 class="text-base font-bold text-slate-900">No agreements yet</h3>
+      <p class="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">Create your first agreement and send the link to your partner to get started.</p>
+      <button id="emptyCreateBtn"
+        class="mt-2 inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition-all">
+        Create First Agreement
+      </button>
+    </div>
 
   </main>
 
 
   <!-- ════════════════════════════════════════
-       MODALS
+       CREATION WIZARD MODAL
   ════════════════════════════════════════ -->
+  <div id="wizardModal" class="modal-wrap">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" id="wizardBackdrop"></div>
 
-  <!-- ── MODAL: Skip Warning ── -->
-  <div id="skipWarningModal" class="modal-wrap">
-    <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
-    <div class="modal-card relative bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 max-w-sm w-full space-y-5">
-      <div class="w-12 h-12 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto text-xl">⚠️</div>
-      <div class="text-center space-y-2">
-        <h3 class="text-base font-bold text-slate-900">Are you sure you want to skip?</h3>
-        <p class="text-xs text-slate-600 leading-relaxed">
-          Unverified agreements have <strong>no government-backed identity audit</strong>. If your partner disputes the deal, you have no proof that the person who signed is who they say they are.
-        </p>
-        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-left space-y-1.5 mt-2">
-          <p class="text-[11px] font-bold text-amber-800 uppercase tracking-wide">What you lose without verification:</p>
-          <p class="text-[11px] text-amber-700">✗ No NIN-linked identity trail</p>
-          <p class="text-[11px] text-amber-700">✗ No certificate of authenticity</p>
-          <p class="text-[11px] text-amber-700">✗ Weaker enforceability in a dispute</p>
+    <div class="modal-card relative bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-lg mx-auto my-4">
+
+      <!-- Wizard header -->
+      <div class="flex items-center justify-between px-6 pt-5 pb-4 border-b border-slate-100">
+        <div>
+          <p id="wizardStepLabel" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Step 1 of 4</p>
+          <h2 id="wizardStepTitle" class="text-base font-bold text-slate-900 mt-0.5">Choose your plan</h2>
         </div>
+        <button id="closeWizardBtn" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition text-sm font-bold">✕</button>
       </div>
-      <div class="grid grid-cols-2 gap-2 pt-1">
-        <button id="skipWarningBackBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm">
-          ← Go Back & Verify
-        </button>
-        <button id="skipWarningConfirmBtn" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold py-2.5 rounded-xl text-xs transition">
-          I understand, skip
-        </button>
+
+      <!-- Progress bar -->
+      <div class="h-1 bg-slate-100">
+        <div id="wizardProgress" class="h-full bg-emerald-600 transition-all duration-300" style="width:25%"></div>
       </div>
-    </div>
-  </div>
 
+      <!-- Step content area -->
+      <div class="px-6 py-5 max-h-[70vh] overflow-y-auto">
 
-  <!-- ── MODAL: NIN Input + Verify ── -->
-  <div id="ninModal" class="modal-wrap">
-    <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
-    <div class="modal-card relative bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 max-w-sm w-full space-y-5">
+        <!-- ── PLAN SELECTOR (Step 0 — before numbered steps) ── -->
+        <div id="stepPlan" class="form-step space-y-4">
+          <p class="text-xs text-slate-500 leading-relaxed">Choose the type of agreement you want to create.</p>
 
-      <!-- Default state: NIN input -->
-      <div id="ninInputState">
-        <div class="space-y-1 mb-4">
-          <h3 class="text-base font-bold text-slate-900">Enter your NIN</h3>
-          <p class="text-xs text-slate-500 leading-relaxed">
-            Your 11-digit National Identification Number will be matched against the name you provided. This confirms you are who you say you are.
-          </p>
-        </div>
-
-        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 space-y-1 mb-4">
-          <p class="text-[11px] font-bold text-emerald-800 uppercase tracking-wide">What this verification does:</p>
-          <p class="text-[11px] text-emerald-700">✓ Links your real identity to this contract</p>
-          <p class="text-[11px] text-emerald-700">✓ Creates a government-backed audit trail</p>
-          <p class="text-[11px] text-emerald-700">✓ Makes the document admissible under Nigerian Evidence Act 2011</p>
-        </div>
-
-        <div class="space-y-1.5">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">NIN (11 digits)</label>
-          <input type="tel" id="ninInput" maxlength="11" placeholder="e.g., 12345678901"
-            class="field tracking-widest text-center text-base font-bold" autocomplete="off">
-          <p id="ninInputError" class="text-[11px] font-semibold text-red-500 hidden"></p>
-        </div>
-
-        <div class="flex gap-2 mt-4">
-          <button id="ninModalCloseBtn" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold py-2.5 rounded-xl text-xs transition">
-            Cancel
+          <!-- Standard -->
+          <button type="button" id="selectStandardBtn"
+            class="w-full text-left p-4 rounded-2xl border-2 border-slate-200 hover:border-emerald-400 bg-white transition-all space-y-1.5 group">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-slate-900">Standard</span>
+              </div>
+              <span class="text-xs font-bold text-white bg-slate-700 px-2.5 py-1 rounded-full">₦700</span>
+            </div>
+            <p class="text-xs text-slate-500 pl-7">For individuals — freelancers, personal loans, quick business deals.</p>
+            <div class="pl-7 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-slate-400 font-medium">
+              <span>✓ NIN-verified creator</span>
+              <span>✓ Tamper-proof link</span>
+              <span>✓ Audit trail</span>
+            </div>
           </button>
-          <!-- Button label changes to "Verify & Pay ₦700" once NIN is 11 digits -->
-          <button id="ninVerifyBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm">
-            Continue
+
+          <!-- Enterprise -->
+          <button type="button" id="selectEnterpriseBtn"
+            class="w-full text-left p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50/60 hover:bg-emerald-50 transition-all space-y-1.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-slate-900">Enterprise</span>
+              </div>
+              <span class="text-xs font-bold text-white bg-emerald-600 px-2.5 py-1 rounded-full">₦5,000</span>
+            </div>
+            <p class="text-xs text-slate-600 pl-7">For businesses — branded contracts with your logo, custom theme, and clause library.</p>
+            <div class="pl-7 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-emerald-700 font-semibold">
+              <span>✓ Everything in Standard</span>
+              <span>✓ Business logo</span>
+              <span>✓ Custom theme</span>
+              <span>✓ Clause library</span>
+              <span>✓ Expiry date</span>
+              <span>✓ PDF download</span>
+            </div>
           </button>
         </div>
+
+        <!-- ── STEP 1: Your Details ── -->
+        <div id="step1" class="form-step hidden space-y-4">
+
+          <!-- Standard fields -->
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Your Full Name</label>
+              <input type="text" id="creatorName" class="field" placeholder="Full legal name" autocomplete="name" required>
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">WhatsApp Number</label>
+              <input type="tel" id="creatorPhone" class="field" placeholder="e.g. 08012345678" autocomplete="tel" required>
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Email Address</label>
+              <input type="email" id="creatorEmail" class="field" placeholder="name@company.com" autocomplete="email" required>
+            </div>
+          </div>
+
+          <!-- Enterprise-only fields -->
+          <div id="enterpriseStep1Fields" class="hidden space-y-3 pt-2 border-t border-slate-100">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Enterprise Details</p>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Business Name</label>
+              <input type="text" id="businessName" class="field" placeholder="Your company or business name">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Business Logo</label>
+              <div id="logoUploadZone"
+                class="logo-upload-zone w-full h-24 rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/30 transition-all">
+                <span class="text-xl" id="logoUploadIcon">🖼️</span>
+                <p class="text-xs text-slate-500 font-medium" id="logoUploadLabel">Click or drag to upload logo</p>
+                <p class="text-[10px] text-slate-400">PNG or JPG, max 2MB</p>
+              </div>
+              <input type="file" id="logoFileInput" accept="image/png,image/jpeg" class="hidden">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Document Theme</label>
+              <div class="grid grid-cols-4 gap-2" id="themeSelector">
+                <button type="button" data-theme="classic"
+                  class="theme-btn selected flex flex-col items-center gap-1 p-2 rounded-xl border-2 border-emerald-500 bg-white text-center">
+                  <div class="w-full h-6 rounded-md bg-white border border-slate-200"></div>
+                  <span class="text-[10px] font-bold text-slate-600">Classic</span>
+                </button>
+                <button type="button" data-theme="dark"
+                  class="theme-btn flex flex-col items-center gap-1 p-2 rounded-xl border-2 border-slate-200 bg-white text-center">
+                  <div class="w-full h-6 rounded-md bg-slate-900"></div>
+                  <span class="text-[10px] font-bold text-slate-600">Dark</span>
+                </button>
+                <button type="button" data-theme="gold"
+                  class="theme-btn flex flex-col items-center gap-1 p-2 rounded-xl border-2 border-slate-200 bg-white text-center">
+                  <div class="w-full h-6 rounded-md bg-amber-50 border border-amber-200"></div>
+                  <span class="text-[10px] font-bold text-slate-600">Gold</span>
+                </button>
+                <button type="button" data-theme="green"
+                  class="theme-btn flex flex-col items-center gap-1 p-2 rounded-xl border-2 border-slate-200 bg-white text-center">
+                  <div class="w-full h-6 rounded-md bg-emerald-50 border border-emerald-200"></div>
+                  <span class="text-[10px] font-bold text-slate-600">Green</span>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Custom Document Title <span class="normal-case font-normal text-slate-400">(optional)</span></label>
+              <input type="text" id="documentTitle" class="field" placeholder='e.g. "Service Agreement", "NDA", "Supply Contract"'>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── STEP 2: Terms ── -->
+        <div id="step2" class="form-step hidden space-y-4">
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Agreement Type</label>
+            <select id="agreementType" class="field">
+              <option value="peer_loan">Money Loan / Borrowing</option>
+              <option value="freelance">Freelance Job / Service Delivery</option>
+              <option value="item_rental">Item Rental / Equipment Hire</option>
+              <option value="business_supply">Business Supply / Goods Delivery</option>
+              <option value="nda">Non-Disclosure Agreement (NDA)</option>
+              <option value="custom">Custom Agreement</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+              Write the terms simply <span class="normal-case font-normal text-slate-400">(be clear about amounts & dates)</span>
+            </label>
+            <textarea id="rawTerms" rows="5" required
+              placeholder="e.g., I am giving Tunde ₦50,000 today to buy goods. He promises to pay me back completely on or before July 15th, 2026. If he doesn't pay, he will clear my shop inventory."
+              class="field resize-none leading-relaxed"></textarea>
+            <button type="button" id="aiPolishBtn"
+              class="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-violet-600 hover:text-violet-700 bg-violet-50 hover:bg-violet-100 px-3 py-2 rounded-xl transition-all">
+              ✨ Polish with AI
+            </button>
+          </div>
+
+          <!-- Enterprise-only: clause library + expiry -->
+          <div id="enterpriseStep2Fields" class="hidden space-y-4 pt-2 border-t border-slate-100">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Enterprise Options</p>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Add Standard Clauses</label>
+              <div class="space-y-2" id="clauseLibrary">
+                <label class="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-slate-50 transition">
+                  <input type="checkbox" class="clause-checkbox mt-0.5 w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" data-clause="penalty">
+                  <div>
+                    <p class="text-xs font-semibold text-slate-800">Penalty Clause</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5">Adds a penalty fee for late payment or breach of terms.</p>
+                  </div>
+                </label>
+                <label class="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-slate-50 transition">
+                  <input type="checkbox" class="clause-checkbox mt-0.5 w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" data-clause="confidentiality">
+                  <div>
+                    <p class="text-xs font-semibold text-slate-800">Confidentiality Clause</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5">Both parties agree not to disclose terms to third parties.</p>
+                  </div>
+                </label>
+                <label class="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-slate-50 transition">
+                  <input type="checkbox" class="clause-checkbox mt-0.5 w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" data-clause="dispute">
+                  <div>
+                    <p class="text-xs font-semibold text-slate-800">Dispute Resolution Clause</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5">Disputes resolved through arbitration before court action.</p>
+                  </div>
+                </label>
+                <label class="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 bg-slate-50/50 cursor-pointer hover:bg-slate-50 transition">
+                  <input type="checkbox" class="clause-checkbox mt-0.5 w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" data-clause="governing_law">
+                  <div>
+                    <p class="text-xs font-semibold text-slate-800">Governing Law Clause</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5">This agreement is governed by the laws of the Federal Republic of Nigeria.</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                Signing Deadline <span class="normal-case font-normal text-slate-400">(link expires if recipient hasn't signed by this date)</span>
+              </label>
+              <input type="date" id="expiryDate" class="field">
+            </div>
+          </div>
+        </div>
+
+        <!-- ── STEP 3: NIN + Payment ── -->
+        <div id="step3" class="form-step hidden space-y-4">
+
+          <!-- Already verified state -->
+          <div id="alreadyVerifiedState" class="hidden bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-start gap-3">
+            <span class="text-xl shrink-0">🪪</span>
+            <div>
+              <p class="text-sm font-bold text-emerald-900">Identity Already Verified</p>
+              <p class="text-xs text-emerald-700 mt-0.5 leading-relaxed">Your NIN was verified when you first signed up. You can proceed straight to payment.</p>
+            </div>
+          </div>
+
+          <!-- NIN input state (first-time users) -->
+          <div id="ninFirstTimeState">
+            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 space-y-1 mb-4">
+              <p class="text-[11px] font-bold text-emerald-800 uppercase tracking-wide">One-time identity verification</p>
+              <p class="text-[11px] text-emerald-700">✓ Links your government identity to all your SignAm agreements</p>
+              <p class="text-[11px] text-emerald-700">✓ You will never need to verify again after this</p>
+              <p class="text-[11px] text-emerald-700">✓ Admissible under Nigerian Evidence Act 2011</p>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">NIN (11 digits)</label>
+              <input type="tel" id="ninInput" maxlength="11" placeholder="e.g., 12345678901"
+                class="field tracking-widest text-center text-base font-bold" autocomplete="off">
+              <p id="ninInputError" class="text-[11px] font-semibold text-red-500 hidden"></p>
+            </div>
+
+            <!-- NIN loading -->
+            <div id="ninLoadingState" class="hidden text-center py-4 space-y-3">
+              <div class="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full spin mx-auto"></div>
+              <p class="text-xs font-semibold text-slate-600">Checking NIN against government database...</p>
+            </div>
+
+            <!-- NIN mismatch -->
+            <div id="ninMismatchState" class="hidden bg-red-50 border border-red-200 rounded-xl p-3 mt-3">
+              <p class="text-xs font-bold text-red-800">Name Mismatch</p>
+              <p class="text-xs text-red-600 mt-0.5 leading-relaxed">The name on this NIN does not match the name you provided. No payment has been taken. Please check your details and try again.</p>
+              <button id="ninRetryBtn" class="mt-2 text-xs font-bold text-red-600 hover:text-red-700">← Try again</button>
+            </div>
+          </div>
+
+          <!-- Payment summary — shown after NIN confirmed (or already verified) -->
+          <div id="paymentSummary" class="hidden space-y-3">
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Payment Summary</p>
+              <div class="flex justify-between items-center">
+                <span class="text-xs text-slate-600" id="paymentPlanLabel">Standard Agreement</span>
+                <span class="text-sm font-extrabold text-slate-900" id="paymentAmount">₦700</span>
+              </div>
+              <div class="flex justify-between items-center text-[11px] text-slate-500">
+                <span>NIN Verification</span>
+                <span class="text-emerald-600 font-semibold">Included</span>
+              </div>
+            </div>
+            <button id="paystackPayBtn"
+              class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm transition shadow-md shadow-emerald-600/20">
+              Pay <span id="paystackBtnAmount">₦700</span> & Continue →
+            </button>
+            <p class="text-[10px] text-center text-slate-400">Secured by Paystack. You will not be charged unless you click above.</p>
+          </div>
+        </div>
+
+        <!-- ── STEP 4: Signature ── -->
+        <div id="step4" class="form-step hidden space-y-4">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="text-xs text-slate-500">Draw your signature to authorize these terms.</p>
+            </div>
+            <div id="verifiedBadge"
+              class="hidden shrink-0 items-center gap-1.5 bg-emerald-100 border border-emerald-300 text-emerald-800 text-[10px] font-bold px-2.5 py-1.5 rounded-full verified-pulse">
+              🪪 NIN Verified
+            </div>
+          </div>
+
+          <div class="relative w-full h-44 bg-slate-50 rounded-xl border-2 border-dashed border-slate-300 overflow-hidden shadow-inner">
+            <canvas id="signatureCanvas" class="w-full h-full touch-none cursor-crosshair"></canvas>
+            <p id="canvasHint" class="absolute inset-0 flex items-center justify-center text-xs text-slate-400 pointer-events-none select-none font-medium">✍️ Sign here</p>
+          </div>
+
+          <div class="flex justify-end">
+            <button type="button" id="clearCanvasBtn"
+              class="text-xs font-bold text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-xl transition-colors">
+              🗑️ Clear
+            </button>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Loading state: checking NIN -->
-      <div id="ninLoadingState" class="hidden text-center space-y-4 py-4">
-        <div class="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full spin mx-auto"></div>
-        <div>
-          <p class="text-sm font-bold text-slate-900">Checking your NIN...</p>
-          <p class="text-xs text-slate-500 mt-0.5">Matching against government identity database.</p>
-        </div>
-      </div>
-
-      <!-- Mismatch state: name doesn't match -->
-      <div id="ninMismatchState" class="hidden text-center space-y-4">
-        <div class="w-12 h-12 rounded-full bg-red-50 border border-red-200 flex items-center justify-center mx-auto text-xl">❌</div>
-        <div>
-          <h3 class="text-base font-bold text-slate-900">Name Mismatch</h3>
-          <p class="text-xs text-slate-600 mt-1 leading-relaxed">
-            The name on this NIN does not match the name you provided. Please check your details and try again.
-          </p>
-          <p class="text-[11px] text-slate-400 mt-2">No payment has been taken.</p>
-        </div>
-        <button id="ninMismatchRetryBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm">
-          Try Again
+      <!-- Wizard footer -->
+      <div class="flex justify-between items-center px-6 py-4 border-t border-slate-100">
+        <button type="button" id="wizardPrevBtn"
+          class="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-all invisible">
+          ← Back
         </button>
-      </div>
-
-      <!-- Success state: match confirmed, ready to pay -->
-      <div id="ninMatchState" class="hidden text-center space-y-4">
-        <div class="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto text-xl">✓</div>
-        <div>
-          <h3 class="text-base font-bold text-slate-900">Identity Confirmed!</h3>
-          <p class="text-xs text-slate-600 mt-1 leading-relaxed">
-            Your NIN matches your name. Complete the ₦700 payment to issue your certificate of authenticity and proceed to signing.
-          </p>
-        </div>
-        <!-- Paystack button — wired in JS, currently a stub -->
-        <button id="paystackPayBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm transition shadow-md shadow-emerald-600/20">
-          Pay ₦700 & Continue →
+        <button type="button" id="wizardNextBtn"
+          class="px-6 py-2.5 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition-all">
+          Continue →
         </button>
-        <p class="text-[10px] text-slate-400">Secured by Paystack. You will not be charged unless you click above.</p>
       </div>
 
     </div>
@@ -443,19 +492,18 @@
       <div class="w-12 h-12 rounded-full bg-red-50 border border-red-200 flex items-center justify-center mx-auto text-lg">⚠️</div>
       <div>
         <h3 class="text-base font-bold text-slate-900">Logging Out?</h3>
-        <p class="text-xs text-slate-500 mt-1 leading-relaxed">Your draft will not be saved. Are you sure you want to leave?</p>
+        <p class="text-xs text-slate-500 mt-1 leading-relaxed">Your draft will not be saved. Are you sure?</p>
       </div>
-      <div class="grid grid-cols-2 gap-2 pt-1">
+      <div class="grid grid-cols-2 gap-2">
         <button id="cancelLogoutBtn" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 rounded-xl text-xs transition">Cancel</button>
         <button id="confirmLogoutBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm">Sign Me Out</button>
       </div>
     </div>
   </div>
 
-
   <!-- ── TOAST ── -->
   <div id="toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-full shadow-lg pointer-events-none">
-    Message here
+    Message
   </div>
 
   <script type="module" src="app.js"></script>
