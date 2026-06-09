@@ -105,19 +105,26 @@
       <!-- Phase 1: Phone verification -->
       <div id="verificationPhase" class="space-y-4">
         <div>
-          <h3 class="text-sm font-bold text-slate-900">Verify your identity to unlock signing</h3>
-          <p class="text-xs text-slate-500 mt-0.5">Enter the WhatsApp number where you received this link.</p>
+          <h3 class="text-sm font-bold text-slate-900">Enter your details to unlock signing</h3>
+          <p class="text-xs text-slate-500 mt-0.5">These will be permanently attached to this agreement as your identity record.</p>
         </div>
-        <div class="space-y-1">
-          <div class="flex gap-2">
-            <input type="tel" id="verifyPhone" placeholder="e.g., 09087654321"
-              class="field flex-1" autocomplete="tel">
-            <button type="button" id="verifyPhoneBtn"
-              class="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold px-5 rounded-xl text-xs transition shrink-0">
-              Verify
-            </button>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Your Full Name</label>
+            <input type="text" id="recipientName" placeholder="Enter your full legal name"
+              class="field" autocomplete="name">
           </div>
-          <!-- Inline error — replaces alert() -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Your WhatsApp Number</label>
+            <div class="flex gap-2">
+              <input type="tel" id="verifyPhone" placeholder="e.g., 09087654321"
+                class="field flex-1" autocomplete="tel">
+              <button type="button" id="verifyPhoneBtn"
+                class="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold px-5 rounded-xl text-xs transition shrink-0">
+                Continue
+              </button>
+            </div>
+          </div>
           <p id="verifyError" class="field-error"></p>
         </div>
       </div>

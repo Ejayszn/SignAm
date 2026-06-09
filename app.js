@@ -5,6 +5,12 @@
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  serverTimestamp,
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC4yCNmFHAkFoO7nYfdS2XcgIHsZn_0_ys",
@@ -18,6 +24,7 @@ const firebaseConfig = {
 
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db   = getFirestore(app);
 
 
 // ─── STATE ───────────────────────────────────
@@ -616,6 +623,18 @@ document.getElementById('clearCanvasBtn').addEventListener('click', () => {
 });
 
 
+// ─── DOCUMENT ID GENERATOR ───────────────────
+
+function generateDocId() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = 'SIG-';
+  for (let i = 0; i < 8; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+
 // ─── SUBMISSION ──────────────────────────────
 
 function isCanvasBlank() {
@@ -625,36 +644,167 @@ function isCanvasBlank() {
   return canvas.toDataURL() === blank.toDataURL();
 }
 
-function submitAgreement() {
+async function submitAgreement() {
   if (isCanvasBlank()) {
     showToast('Please sign inside the canvas before finalizing.');
     return;
   }
 
-  const payload = {
-    parties: {
-      names:        Array.from(partiesContainer.querySelectorAll('.party-name')).map(i => i.value.trim()),
-      phones:       Array.from(partiesContainer.querySelectorAll('.party-phone')).map(i => i.value.trim()),
-      creatorEmail: document.getElementById('creatorEmail').value.trim(),
+  // Lock the button immediately
+  nextBtn.disabled = true;
+  nextBtn.textContent = 'Saving...';
+
+  const user      = auth.currentUser;
+  const docId     = generateDocId();
+  const creatorName  = document.getElementById('creatorName').value.trim();
+  const creatorPhone = document.getElementById('creatorPhone').value.trim();
+  const creatorEmail = document.getElementById('creatorEmail').value.trim();
+
+  // Collect IP address (best-effort, non-blocking)
+  let ipAddress = 'unknown';
+  try {
+    const ipRes = await fetch('https://api.ipify.org?format=json');
+    const ipData = await ipRes.json();
+    ipAddress = ipData.ip;
+  } catch (_) { /* silent fail — IP is metadata, not critical */ }
+
+  const agreementData = {
+    // Top-level metadata
+    status:    'pending_recipient',
+    createdAt: serverTimestamp(),
+
+    // Creator details
+    creator: {
+      uid:          user.uid,
+      name:         creatorName,
+      phone:        creatorPhone,
+      email:        creatorEmail,
+      ninVerified:  verificationState.ninMatched,
+      paystackRef:  verificationState.paystackRef || null,
+      signatureData: canvas.toDataURL(),
+      signedAt:     new Date().toISOString(),
+      ipAddress,
+      userAgent:    navigator.userAgent,
     },
-    type:          document.getElementById('agreementType').value,
-    rawTerms:      rawTermsInput.value.trim(),
-    verification:  {
-      chosen:      verificationState.chosen,
-      ninVerified: verificationState.ninMatched,
-      paymentDone: verificationState.paymentDone,
+
+    // Agreement content
+    agreement: {
+      type:         document.getElementById('agreementType').value,
+      rawTerms:     rawTermsInput.value.trim(),
+      polishedTerms: null, // Groq — wired later
     },
-    signatureData: canvas.toDataURL(),
-    createdAt:     new Date().toISOString(),
+
+    // Recipient slot — filled when they open the link
+    recipient: null,
+
+    // Audit trail
+    auditTrail: {
+      creatorIP:     ipAddress,
+      creatorDevice: navigator.userAgent,
+      recipientIP:   null,
+      recipientDevice: null,
+      completedAt:   null,
+    },
   };
 
-  console.log('Agreement payload ready:', {
-    ...payload,
-    signatureData: '[base64 omitted]',
+  try {
+    // Write to agreements/{docId}
+    await setDoc(doc(db, 'agreements', docId), agreementData);
+
+    // Also write a reference into the user's own agreements list
+    // so the dashboard can query it without a collection group query
+    await setDoc(
+      doc(db, 'users', user.uid, 'agreements', docId),
+      {
+        docId,
+        createdAt: serverTimestamp(),
+        status: 'pending_recipient',
+        creatorName,
+      }
+    );
+
+    // Show success modal with the shareable link
+    showSuccessModal(docId);
+
+  } catch (err) {
+    console.error('Firestore write error:', err);
+    showToast('Error saving agreement. Please try again.');
+    nextBtn.disabled = false;
+    nextBtn.textContent = 'Authorize & Submit';
+  }
+}
+
+
+// ─── SUCCESS MODAL ───────────────────────────
+
+function showSuccessModal(docId) {
+  const baseUrl  = window.location.origin;
+  const signLink = `${baseUrl}/sign.html?id=${docId}`;
+
+  // Build and inject the modal
+  const modal = document.createElement('div');
+  modal.id = 'successModal';
+  modal.className = 'modal-wrap open';
+  modal.innerHTML = `
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+    <div class="modal-card relative bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 max-w-sm w-full space-y-5 text-center">
+
+      <div class="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto text-2xl">✓</div>
+
+      <div>
+        <h3 class="text-base font-bold text-slate-900">Agreement Created!</h3>
+        <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+          Your agreement is now live and locked. Send the link below to your partner so they can review and sign.
+        </p>
+      </div>
+
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Document ID</p>
+        <p class="font-mono font-bold text-slate-900 text-sm">${docId}</p>
+      </div>
+
+      <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 space-y-2">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Shareable Link</p>
+        <p id="shareableLinkText" class="font-mono text-xs text-slate-700 break-all">${signLink}</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <button id="copyLinkBtn"
+          class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm">
+          📋 Copy Link
+        </button>
+        <button id="whatsappShareBtn"
+          class="w-full bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm">
+          WhatsApp →
+        </button>
+      </div>
+
+      <a href="home.html"
+        class="block text-xs font-semibold text-slate-400 hover:text-slate-600 transition">
+        Go to Dashboard
+      </a>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Copy link button
+  document.getElementById('copyLinkBtn').addEventListener('click', () => {
+    navigator.clipboard.writeText(signLink).then(() => {
+      document.getElementById('copyLinkBtn').textContent = '✓ Copied!';
+      setTimeout(() => {
+        document.getElementById('copyLinkBtn').textContent = '📋 Copy Link';
+      }, 2000);
+    });
   });
 
-  // TODO: POST to Firestore / backend API, then redirect to success page
-  showToast('Agreement captured. Saving to database...', 4000);
+  // WhatsApp share
+  document.getElementById('whatsappShareBtn').addEventListener('click', () => {
+    const msg = encodeURIComponent(
+      `I've created a legal agreement on SignAm. Please review and sign it here:\n${signLink}`
+    );
+    window.open(`https://wa.me/?text=${msg}`, '_blank');
+  });
 }
 
 

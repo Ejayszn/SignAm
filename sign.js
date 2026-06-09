@@ -1,29 +1,35 @@
 // ─────────────────────────────────────────────
 //  SignAm — sign.js
-//  Recipient signing page: load contract → verify → sign → submit
+//  Recipient signing page: load from Firestore → verify → sign → save
 // ─────────────────────────────────────────────
 
-// ─── MOCK DATA ───────────────────────────────
-// In production this is fetched server-side by document ID.
-// The phone numbers must NEVER live in client-side JS in production —
-// the match check must happen on your backend API.
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc,
+  serverTimestamp,
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-const mockDatabase = {
-  "SIG-8392A83F": {
-    creatorName: "Emmanuel Oguibe",
-    terms: "I am giving Musa ₦150,000 today to buy market supply. He promises to pay me back completely on or before July 15th, 2026. If he doesn't pay, I will collect his remaining shop goods.",
-    parties: [
-      { name: "Emmanuel Oguibe",  phone: "08012345678", isCreator: true  },
-      { name: "Alhaji Musa Bello", phone: "09087654321", isCreator: false },
-    ],
-  },
+const firebaseConfig = {
+  apiKey: "AIzaSyC4yCNmFHAkFoO7nYfdS2XcgIHsZn_0_ys",
+  authDomain: "signamnow.firebaseapp.com",
+  projectId: "signamnow",
+  storageBucket: "signamnow.firebasestorage.app",
+  messagingSenderId: "267871547400",
+  appId: "1:267871547400:web:b70ac6c08fa0cfdd1561bd",
+  measurementId: "G-4C1B313HBZ"
 };
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
 
 
 // ─── URL PARAM ───────────────────────────────
 
 const urlParams   = new URLSearchParams(window.location.search);
-const activeDocId = (urlParams.get('id') || 'SIG-8392A83F').toUpperCase();
+const activeDocId = urlParams.get('id')?.toUpperCase();
 
 
 // ─── DOM REFS ────────────────────────────────
@@ -43,10 +49,14 @@ const verifyPhoneInput = document.getElementById('verifyPhone');
 const verifyPhoneBtn   = document.getElementById('verifyPhoneBtn');
 const verifyError      = document.getElementById('verifyError');
 
-const canvas    = document.getElementById('receiverCanvas');
-const ctx       = canvas.getContext('2d');
+// Recipient self-declaration fields (added in sign.html)
+const recipientNameInput  = document.getElementById('recipientName');
+const recipientPhoneInput = document.getElementById('recipientPhone');
+
+const canvas     = document.getElementById('receiverCanvas');
+const ctx        = canvas.getContext('2d');
 const canvasHint = document.getElementById('canvasHint');
-const signError = document.getElementById('signError');
+const signError  = document.getElementById('signError');
 
 const clearBtn  = document.getElementById('clearReceiverCanvasBtn');
 const submitBtn = document.getElementById('submitSignatureBtn');
@@ -54,119 +64,129 @@ const submitBtn = document.getElementById('submitSignatureBtn');
 
 // ─── STATE ───────────────────────────────────
 
-let currentAgreement  = null;
-let verifiedParty     = null;
-let isDrawing         = false;
-let hasDrawn          = false;
-let canvasEventsLive  = false; // Canvas events attached ONLY after verification
+let agreementData    = null;
+let isDrawing        = false;
+let hasDrawn         = false;
+let canvasEventsLive = false;
 
 
-// ─── LOAD CONTRACT ───────────────────────────
+// ─── LOAD AGREEMENT FROM FIRESTORE ───────────
 
-function loadAgreement() {
-  const agreement = mockDatabase[activeDocId];
-
-  if (!agreement) {
-    showFatalError(`Agreement "${activeDocId}" was not found or has expired.`);
+async function loadAgreement() {
+  if (!activeDocId) {
+    showFatalError('No document ID found in this link. Please check the URL and try again.');
     return;
   }
 
-  currentAgreement = agreement;
+  try {
+    const docRef  = doc(db, 'agreements', activeDocId);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      showFatalError(`Agreement "${activeDocId}" was not found or has expired.`);
+      return;
+    }
+
+    agreementData = docSnap.data();
+
+    // Block if already completed
+    if (agreementData.status === 'completed') {
+      showFatalError('This agreement has already been signed by both parties and is now locked.');
+      return;
+    }
+
+    renderAgreement();
+
+  } catch (err) {
+    console.error('Firestore read error:', err);
+    showFatalError('Could not load agreement. Please check your connection and try again.');
+  }
+}
+
+function renderAgreement() {
+  const { creator, agreement } = agreementData;
 
   docIdDisplay.textContent = activeDocId;
-  inviterName.textContent  = agreement.creatorName;
-  displayTerms.textContent = agreement.terms;
+  inviterName.textContent  = creator.name;
+  displayTerms.textContent = agreement.polishedTerms || agreement.rawTerms;
 
-  // Parties list
-  partiesList.innerHTML = agreement.parties
-    .map((p, i) => `
-      <p class="text-xs text-slate-700">
-        <strong>Party ${String.fromCharCode(65 + i)}${p.isCreator ? ' (Creator)' : ''}:</strong> ${p.name}
-      </p>
-    `)
-    .join('');
+  // Parties list — creator shown, recipient slot shown as pending
+  partiesList.innerHTML = `
+    <p class="text-xs text-slate-700">
+      <strong>Party A (Creator):</strong> ${creator.name}
+      ${creator.ninVerified
+        ? '<span class="ml-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">🪪 NIN Verified</span>'
+        : ''}
+    </p>
+    <p class="text-xs text-slate-700">
+      <strong>Party B (Recipient):</strong>
+      <span class="text-slate-400 italic">Awaiting your details</span>
+    </p>
+  `;
 
   // Signatures grid
-  signaturesGrid.innerHTML = agreement.parties
-    .map((p, i) => {
-      const isSigned   = p.isCreator; // Creator is already signed
-      const labelClass = isSigned ? 'text-emerald-700 font-bold' : 'text-amber-700 font-semibold';
-      const boxClass   = isSigned
-        ? 'border border-slate-200 bg-emerald-50/30 rounded-xl flex items-center justify-center p-1'
-        : 'border border-dashed border-amber-300 bg-amber-50/30 rounded-xl flex items-center justify-center text-center';
-      const inner = isSigned
-        ? `<span class="text-[10px] font-bold text-emerald-700 px-2 py-0.5 bg-emerald-100/50 rounded border border-emerald-200">✍️ SIGNED</span>`
-        : `<span class="text-[9px] text-amber-700 font-semibold tracking-tight" id="receiverSigPlaceholder">Awaiting Your Action</span>`;
-
-      return `
-        <div class="space-y-1">
-          <p class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">${p.name}</p>
-          <div class="h-14 w-full ${boxClass}">${inner}</div>
-        </div>
-      `;
-    })
-    .join('');
+  signaturesGrid.innerHTML = `
+    <div class="space-y-1">
+      <p class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">${creator.name}</p>
+      <div class="h-14 w-full border border-slate-200 bg-emerald-50/30 rounded-xl flex items-center justify-center p-1">
+        <span class="text-[10px] font-bold text-emerald-700 px-2 py-0.5 bg-emerald-100/50 rounded border border-emerald-200">✍️ SIGNED</span>
+      </div>
+    </div>
+    <div class="space-y-1">
+      <p class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Your Signature</p>
+      <div id="receiverSigPlaceholder" class="h-14 w-full border border-dashed border-amber-300 bg-amber-50/30 rounded-xl flex items-center justify-center text-center">
+        <span class="text-[9px] text-amber-700 font-semibold">Awaiting Your Action</span>
+      </div>
+    </div>
+  `;
 }
 
 function showFatalError(msg) {
   document.querySelector('main').innerHTML = `
-    <div class="bg-red-50 border border-red-200 rounded-2xl p-6 text-center space-y-2">
-      <p class="text-sm font-bold text-red-800">Document Not Found</p>
-      <p class="text-xs text-red-600">${msg}</p>
+    <div class="bg-red-50 border border-red-200 rounded-2xl p-6 text-center space-y-2 max-w-xl mx-auto">
+      <p class="text-sm font-bold text-red-800">Unable to Load Agreement</p>
+      <p class="text-xs text-red-600 leading-relaxed">${msg}</p>
     </div>
   `;
 }
 
 
-// ─── PHONE VERIFICATION ──────────────────────
-// ⚠️  PRODUCTION NOTE: move the phone match to your server.
-//     The API call should be: POST /api/verify { docId, phone }
-//     and return { matched: true/false, partyName: string }
-//     so phone numbers never touch the client bundle.
+// ─── RECIPIENT SELF-DECLARATION + VERIFY ─────
+// Recipient enters their own name + phone.
+// Phone is matched server-side in production.
+// For now: any non-empty phone proceeds (identity is captured in Firestore).
 
 verifyPhoneBtn.addEventListener('click', handleVerification);
-verifyPhoneInput.addEventListener('keydown', e => {
+verifyPhoneInput?.addEventListener('keydown', e => {
   if (e.key === 'Enter') handleVerification();
 });
 
 function handleVerification() {
-  const entered = verifyPhoneInput.value.trim();
+  const name  = recipientNameInput?.value.trim();
+  const phone = verifyPhoneInput.value.trim();
+
   clearError(verifyError, verifyPhoneInput);
 
-  if (!entered) {
+  if (!name) {
+    showError(verifyError, recipientNameInput, 'Please enter your full name.');
+    return;
+  }
+  if (!phone) {
     showError(verifyError, verifyPhoneInput, 'Please enter your WhatsApp number.');
     return;
   }
 
-  if (!currentAgreement) return;
-
-  const match = currentAgreement.parties.find(
-    p => p.phone === entered && !p.isCreator
-  );
-
-  if (!match) {
-    showError(
-      verifyError,
-      verifyPhoneInput,
-      'That number is not listed as a recipient for this agreement. Please check and try again.'
-    );
-    return;
-  }
-
-  verifiedParty = match;
-
-  // Transition to signing phase
+  // Transition to signing
   verificationPhase.classList.add('hidden');
   signingPhase.classList.remove('hidden');
 
-  // Update the receiver's signature placeholder to show active state
   const placeholder = document.getElementById('receiverSigPlaceholder');
   if (placeholder) {
     placeholder.innerHTML = `<span class="text-[9px] text-emerald-600 font-bold animate-pulse">✍️ Signing Active...</span>`;
   }
 
   initCanvas();
-  attachCanvasEvents(); // FIX: events attached ONLY after identity verified
+  attachCanvasEvents();
 }
 
 
@@ -206,22 +226,17 @@ function onDraw(e) {
   ctx.lineTo(x, y);
   ctx.stroke();
   if (e.cancelable) e.preventDefault();
-
   if (!hasDrawn) {
     hasDrawn = true;
     canvasHint.style.display = 'none';
   }
 }
 
-function onDrawEnd() {
-  isDrawing = false;
-}
+function onDrawEnd() { isDrawing = false; }
 
-// FIX: canvas events are only registered after verification succeeds
 function attachCanvasEvents() {
   if (canvasEventsLive) return;
   canvasEventsLive = true;
-
   canvas.addEventListener('mousedown',  onDrawStart);
   canvas.addEventListener('mousemove',  onDraw);
   window.addEventListener('mouseup',    onDrawEnd);
@@ -231,7 +246,6 @@ function attachCanvasEvents() {
 }
 
 clearBtn.addEventListener('click', () => {
-  if (!ctx) return;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   hasDrawn = false;
   canvasHint.style.display = '';
@@ -258,36 +272,59 @@ async function handleSubmit() {
     return;
   }
 
-  submitBtn.disabled   = true;
+  submitBtn.disabled    = true;
   submitBtn.textContent = 'Sealing agreement...';
 
-  const payload = {
-    docId:         activeDocId,
-    signerName:    verifiedParty.name,
-    signerPhone:   verifiedParty.phone,
-    signatureData: canvas.toDataURL(),
-    signedAt:      new Date().toISOString(),
-  };
+  // Collect recipient IP (best-effort)
+  let ipAddress = 'unknown';
+  try {
+    const ipRes  = await fetch('https://api.ipify.org?format=json');
+    const ipData = await ipRes.json();
+    ipAddress = ipData.ip;
+  } catch (_) {}
 
-  // TODO: POST payload to your backend / Firestore
-  // await fetch('/api/sign', { method: 'POST', body: JSON.stringify(payload) });
-  console.log('Signature payload ready:', { ...payload, signatureData: '[base64 omitted]' });
+  const recipientName  = recipientNameInput?.value.trim() || 'Unknown';
+  const recipientPhone = verifyPhoneInput.value.trim();
 
-  // Simulate async save (replace with real await above)
-  await new Promise(r => setTimeout(r, 800));
+  try {
+    const docRef = doc(db, 'agreements', activeDocId);
 
-  // Show success screen
-  document.getElementById('actionZone').classList.add('hidden');
-  finalDocId.textContent = activeDocId;
-  successScreen.classList.remove('hidden');
+    await updateDoc(docRef, {
+      status: 'completed',
+      recipient: {
+        name:          recipientName,
+        phone:         recipientPhone,
+        signatureData: canvas.toDataURL(),
+        signedAt:      new Date().toISOString(),
+        ipAddress,
+        userAgent:     navigator.userAgent,
+      },
+      'auditTrail.recipientIP':     ipAddress,
+      'auditTrail.recipientDevice': navigator.userAgent,
+      'auditTrail.completedAt':     serverTimestamp(),
+    });
+
+    // Show success screen
+    document.getElementById('actionZone').classList.add('hidden');
+    finalDocId.textContent = activeDocId;
+    successScreen.classList.remove('hidden');
+
+  } catch (err) {
+    console.error('Firestore update error:', err);
+    showError(signError, null, 'Error saving your signature. Please check your connection and try again.');
+    submitBtn.disabled    = false;
+    submitBtn.textContent = 'Confirm & Seal Agreement 🟢';
+  }
 }
 
 
 // ─── ERROR HELPERS ───────────────────────────
 
 function showError(errorEl, inputEl, msg) {
-  errorEl.textContent = msg;
-  errorEl.classList.add('visible');
+  if (errorEl) {
+    errorEl.textContent = msg;
+    errorEl.classList.add('visible');
+  }
   if (inputEl) inputEl.classList.add('error');
 }
 
@@ -299,8 +336,7 @@ function clearError(errorEl, inputEl) {
   if (inputEl) inputEl.classList.remove('error');
 }
 
-// Clear verify error on input
-verifyPhoneInput.addEventListener('input', () => clearError(verifyError, verifyPhoneInput));
+verifyPhoneInput?.addEventListener('input', () => clearError(verifyError, verifyPhoneInput));
 
 
 // ─── INIT ────────────────────────────────────
