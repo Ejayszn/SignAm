@@ -248,7 +248,7 @@ async function loadDashboard(uid) {
 
 function buildAgreementCard(data) {
   const card = document.createElement('div');
-  card.className = 'agreement-card bg-white rounded-2xl border border-slate-200 p-5 shadow-sm cursor-pointer';
+  card.className = 'agreement-card p-5 cursor-pointer';   // ← Updated
 
   const statusColor = data.status === 'completed'
     ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
@@ -293,6 +293,7 @@ function buildAgreementCard(data) {
     </div>` : ''}
   `;
 
+  // Copy button functionality
   card.querySelector('.copy-link-btn')?.addEventListener('click', (e) => {
     const link = e.target.dataset.link;
     navigator.clipboard.writeText(link).then(() => {

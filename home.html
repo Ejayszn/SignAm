@@ -9,7 +9,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { 
+      font-family: 'Plus Jakarta Sans', sans-serif; 
+      background-color: #f9fafb; 
+      color: #0f172a;
+    }
     .serif-font { font-family: 'Playfair Display', serif; }
 
     /* Premium Smooth Input Fields */
@@ -26,8 +30,8 @@
       outline: none;
     }
     .field:focus {
-      border-color: #059669;
-      box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.08);
+      border-color: #15803d;
+      box-shadow: 0 0 0 4px rgba(21, 128, 61, 0.08);
       background: #fff;
     }
     .field.error {
@@ -65,34 +69,69 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .spin { animation: spin 0.8s linear infinite; }
 
-    /* Verified Pulse Ring Effect */
+    /* Verified Pulse */
     @keyframes verifiedPulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.3); }
-      50%      { box-shadow: 0 0 0 8px rgba(5, 150, 105, 0); }
+      0%, 100% { box-shadow: 0 0 0 0 rgba(21, 128, 61, 0.3); }
+      50%      { box-shadow: 0 0 0 8px rgba(21, 128, 61, 0); }
     }
     .verified-pulse { animation: verifiedPulse 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 
-    /* Toast Utilities */
+    /* Toast */
     #toast { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
     #toast.hidden { opacity: 0; transform: translate(-50%, 12px); pointer-events: none; }
 
-    /* Interactive Elements Hover */
-    .agreement-card { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-    .agreement-card:hover { box-shadow: 0 10px 25px -5px rgba(0,0,0,0.04), 0 8px 16px -6px rgba(0,0,0,0.04); transform: translateY(-2px); }
+    /* ==================== MINIMAL CARDS (TaxC Style) ==================== */
+    .stat-card {
+      background: transparent;
+      border: none;
+      padding: 24px 0;
+      border-bottom: 1.5px solid #e5e7eb;
+      text-align: center;
+    }
+    .stat-card:last-child {
+      border-bottom: none;
+    }
 
-    .theme-btn { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-    .theme-btn.selected { ring: 2px; ring-color: #059669; }
+    .agreement-card {
+      background: transparent;
+      border: 1px solid #e5e7eb;
+      border-radius: 20px;
+      padding: 24px;
+      transition: all 0.2s ease;
+    }
+    .agreement-card:hover {
+      border-color: #cbd5e1;
+      background: rgba(255, 255, 255, 0.65);
+      transform: translateY(-2px);
+    }
 
-    .logo-upload-zone.drag-over {
-      border-color: #059669;
-      background: #f0fdf4;
+    /* Skeleton Loaders */
+    .skeleton-loader {
+      background: transparent;
+      border: 1px solid #e5e7eb;
+      border-radius: 20px;
+      height: 100px;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* Empty State */
+    #emptyState {
+      background: transparent;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 24px;
+      padding: 60px 20px;
     }
   </style>
 </head>
-<body class="bg-slate-50/60 text-slate-900 antialiased min-h-screen">
+<body class="bg-slate-50 text-slate-900 antialiased min-h-screen">
 
   <!-- ── HEADER ── -->
-  <header class="bg-white/80 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-50 px-6 py-3.5 flex justify-between items-center">
+  <header class="bg-[#f9fafb]/95 backdrop-blur-md border-b border-slate-200/70 sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
     <div class="flex items-center gap-2.5">
       <div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-extrabold text-lg shadow-sm shadow-emerald-600/20">S</div>
       <span class="font-bold text-xl tracking-tight text-slate-900">Sign<span class="text-emerald-600">Am</span></span>
@@ -102,7 +141,6 @@
         <div id="avatarContainer" class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-700 font-bold text-xs flex items-center justify-center border border-emerald-200/60 overflow-hidden shadow-inner"></div>
         <span id="userNameText" class="text-xs font-semibold text-slate-700 hidden sm:inline-block"></span>
       </div>
-      <!-- NIN verified pill -->
       <div id="ninVerifiedPill" style="display:none;" class="flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-3 py-1 rounded-full">
         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Verified
       </div>
@@ -129,16 +167,16 @@
     </div>
 
     <!-- Stats row -->
-    <div class="grid grid-cols-3 gap-4">
-      <div class="bg-white rounded-2xl border border-slate-200/60 p-5 text-center shadow-sm transition-all duration-200 hover:border-slate-200">
+    <div class="grid grid-cols-3 gap-6">
+      <div class="stat-card">
         <p id="statTotal" class="text-3xl font-extrabold text-slate-900 tracking-tight">—</p>
         <p class="text-xs font-semibold text-slate-400 mt-1 uppercase tracking-wider">Total</p>
       </div>
-      <div class="bg-white rounded-2xl border border-slate-200/60 p-5 text-center shadow-sm transition-all duration-200 hover:border-slate-200">
+      <div class="stat-card">
         <p id="statPending" class="text-3xl font-extrabold text-amber-600 tracking-tight">—</p>
         <p class="text-xs font-semibold text-slate-400 mt-1 uppercase tracking-wider">Pending</p>
       </div>
-      <div class="bg-white rounded-2xl border border-slate-200/60 p-5 text-center shadow-sm transition-all duration-200 hover:border-slate-200">
+      <div class="stat-card">
         <p id="statCompleted" class="text-3xl font-extrabold text-emerald-600 tracking-tight">—</p>
         <p class="text-xs font-semibold text-slate-400 mt-1 uppercase tracking-wider">Completed</p>
       </div>
@@ -147,12 +185,12 @@
     <!-- Agreements list -->
     <div id="agreementsList" class="space-y-4">
       <!-- Skeleton loaders -->
-      <div class="skeleton-loader bg-white rounded-2xl border border-slate-100 p-6 animate-pulse h-24"></div>
-      <div class="skeleton-loader bg-white rounded-2xl border border-slate-100 p-6 animate-pulse h-24"></div>
+      <div class="skeleton-loader"></div>
+      <div class="skeleton-loader"></div>
     </div>
 
     <!-- Empty state -->
-    <div id="emptyState" class="hidden bg-white rounded-2xl border border-slate-200/60 p-12 text-center space-y-4 shadow-sm">
+    <div id="emptyState" class="hidden text-center space-y-4">
       <div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mx-auto text-slate-400">
         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
       </div>
