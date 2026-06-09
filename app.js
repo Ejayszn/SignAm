@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────
-//  SignAm — Workspace JS
-//  Scope: Steps 1–3 + Auth + Live Preview
+//  SignAm — app.js
+//  Scope: 4-step wizard + verification crossroads + NIN flow + signature
 // ─────────────────────────────────────────────
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
@@ -16,39 +16,71 @@ const firebaseConfig = {
   measurementId: "G-4C1B313HBZ"
 };
 
-const app = initializeApp(firebaseConfig);
+const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 
 // ─── STATE ───────────────────────────────────
 
 let currentStep = 1;
-const TOTAL_STEPS = 3;
+const TOTAL_STEPS = 4;
+
+// Verification state — persists across the modal flow
+const verificationState = {
+  chosen: null,       // 'verified' | 'skipped' | null
+  ninValue: null,     // the raw NIN string after confirmed match
+  ninMatched: false,  // true only after API returns name_match: true
+  paymentDone: false, // true after Paystack payment succeeds
+};
 
 
 // ─── DOM REFS ────────────────────────────────
 
-const steps        = document.querySelectorAll('.form-step');
-const nextBtn      = document.getElementById('nextBtn');
-const prevBtn      = document.getElementById('prevBtn');
-const progressBar  = document.getElementById('progressBar');
-const stepLabel    = document.getElementById('stepLabel');
+const steps       = document.querySelectorAll('.form-step');
+const nextBtn     = document.getElementById('nextBtn');
+const prevBtn     = document.getElementById('prevBtn');
+const progressBar = document.getElementById('progressBar');
+const stepLabel   = document.getElementById('stepLabel');
 
 const partiesContainer = document.getElementById('partiesContainer');
 const addPartyBtn      = document.getElementById('addPartyBtn');
 
 const rawTermsInput  = document.getElementById('rawTerms');
+const aiPolishBtn    = document.getElementById('aiPolishBtn');
 const previewParties = document.getElementById('previewParties');
 const previewTerms   = document.getElementById('previewTerms');
-const previewSigImage        = document.getElementById('previewSigImage');
-const previewSigPlaceholder  = document.getElementById('previewSigPlaceholder');
+const previewSigImage       = document.getElementById('previewSigImage');
+const previewSigPlaceholder = document.getElementById('previewSigPlaceholder');
+const previewVerifiedTag    = document.getElementById('previewVerifiedTag');
+const previewVerificationSection = document.getElementById('previewVerificationSection');
+
+const verifiedBadge = document.getElementById('verifiedBadge');
 
 const userDisplayBadge = document.getElementById('userDisplayBadge');
 const avatarContainer  = document.getElementById('avatarContainer');
 const userNameText     = document.getElementById('userNameText');
 const authStatusBtn    = document.getElementById('authStatusBtn');
 
-const logoutModal    = document.getElementById('logoutModal');
+// Modals
+const skipWarningModal      = document.getElementById('skipWarningModal');
+const skipWarningBackBtn    = document.getElementById('skipWarningBackBtn');
+const skipWarningConfirmBtn = document.getElementById('skipWarningConfirmBtn');
+
+const ninModal          = document.getElementById('ninModal');
+const ninInput          = document.getElementById('ninInput');
+const ninInputError     = document.getElementById('ninInputError');
+const ninVerifyBtn      = document.getElementById('ninVerifyBtn');
+const ninModalCloseBtn  = document.getElementById('ninModalCloseBtn');
+const ninMismatchRetryBtn = document.getElementById('ninMismatchRetryBtn');
+const paystackPayBtn    = document.getElementById('paystackPayBtn');
+
+// NIN modal inner states
+const ninInputState    = document.getElementById('ninInputState');
+const ninLoadingState  = document.getElementById('ninLoadingState');
+const ninMismatchState = document.getElementById('ninMismatchState');
+const ninMatchState    = document.getElementById('ninMatchState');
+
+const logoutModal     = document.getElementById('logoutModal');
 const cancelLogoutBtn  = document.getElementById('cancelLogoutBtn');
 const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
 
@@ -65,9 +97,19 @@ function showToast(message, durationMs = 3000) {
   const toast = document.getElementById('toast');
   toast.textContent = message;
   toast.classList.remove('hidden');
-
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toast.classList.add('hidden'), durationMs);
+}
+
+
+// ─── MODAL HELPERS ───────────────────────────
+
+function openModal(modalEl) {
+  modalEl.classList.add('open');
+}
+
+function closeModal(modalEl) {
+  modalEl.classList.remove('open');
 }
 
 
@@ -87,7 +129,6 @@ onAuthStateChanged(auth, (user) => {
     return;
   }
 
-  // Show user badge
   userDisplayBadge.style.display = 'flex';
   userNameText.textContent = user.displayName || 'SignAm User';
 
@@ -97,15 +138,13 @@ onAuthStateChanged(auth, (user) => {
     avatarContainer.textContent = getInitials(user.displayName);
   }
 
-  // Pre-fill creator name if the field is still empty
-  const creatorNameInput = document.getElementById('creatorName');
+  const creatorNameInput  = document.getElementById('creatorName');
+  const creatorEmailInput = document.getElementById('creatorEmail');
+
   if (creatorNameInput && !creatorNameInput.value && user.displayName) {
     creatorNameInput.value = user.displayName;
     renderPartiesPreview();
   }
-
-  // Pre-fill creator email from auth session
-  const creatorEmailInput = document.getElementById('creatorEmail');
   if (creatorEmailInput && !creatorEmailInput.value && user.email) {
     creatorEmailInput.value = user.email;
   }
@@ -114,51 +153,36 @@ onAuthStateChanged(auth, (user) => {
 
 // ─── LOGOUT ──────────────────────────────────
 
-authStatusBtn.addEventListener('click', () => {
-  logoutModal.classList.remove('hidden');
-  logoutModal.classList.add('flex');
-});
-
-cancelLogoutBtn.addEventListener('click', closeLogoutModal);
+authStatusBtn.addEventListener('click', () => openModal(logoutModal));
+cancelLogoutBtn.addEventListener('click', () => closeModal(logoutModal));
 
 confirmLogoutBtn.addEventListener('click', async () => {
   confirmLogoutBtn.disabled = true;
   confirmLogoutBtn.textContent = 'Leaving...';
   cancelLogoutBtn.disabled = true;
-
   try {
     await signOut(auth);
     window.location.href = 'login.html';
   } catch (err) {
     console.error('Sign out error:', err);
     showToast('Error logging out. Please try again.');
-    resetLogoutModal();
+    confirmLogoutBtn.disabled = false;
+    confirmLogoutBtn.textContent = 'Sign Me Out';
+    cancelLogoutBtn.disabled = false;
+    closeModal(logoutModal);
   }
 });
-
-function closeLogoutModal() {
-  logoutModal.classList.add('hidden');
-  logoutModal.classList.remove('flex');
-  resetLogoutModal();
-}
-
-function resetLogoutModal() {
-  confirmLogoutBtn.disabled = false;
-  confirmLogoutBtn.textContent = 'Sign Me Out';
-  cancelLogoutBtn.disabled = false;
-}
 
 
 // ─── MULTI-PARTY MANAGEMENT ──────────────────
 
 function getPartyLabel(index) {
-  // 0=A, 1=B, 2=C, ...
   return String.fromCharCode(65 + index);
 }
 
 addPartyBtn.addEventListener('click', () => {
   const existingRows = partiesContainer.querySelectorAll('[data-party]');
-  const newIndex = existingRows.length; // 0-based; 0=A, 1=B already exist
+  const newIndex = existingRows.length;
   const label = getPartyLabel(newIndex);
 
   const row = document.createElement('div');
@@ -181,12 +205,10 @@ addPartyBtn.addEventListener('click', () => {
   });
 
   row.querySelectorAll('input').forEach(i => i.addEventListener('input', renderPartiesPreview));
-
   partiesContainer.appendChild(row);
   renderPartiesPreview();
 });
 
-// Attach live preview to the fixed Party A & B fields
 partiesContainer.querySelectorAll('.party-name').forEach(input =>
   input.addEventListener('input', renderPartiesPreview)
 );
@@ -203,7 +225,6 @@ function renderPartiesPreview() {
   if (names.length === 0) return;
 
   let html = 'This agreement is entered into between ';
-
   names.forEach((name, i) => {
     const tag = `<span class="font-semibold underline text-slate-900 bg-slate-50 px-1 rounded">${name}</span>`;
     if (i === 0) {
@@ -221,9 +242,20 @@ function renderPartiesPreview() {
 rawTermsInput.addEventListener('input', () => {
   const val = rawTermsInput.value.trim();
   previewTerms.textContent = val || 'Start typing what you both agreed on — watch it update here in real time...';
-  previewTerms.classList.toggle('italic', !val);
+  previewTerms.classList.toggle('italic',       !val);
   previewTerms.classList.toggle('text-slate-500', !val);
   previewTerms.classList.toggle('text-slate-800', !!val);
+});
+
+// AI Polish — stub, wired to Groq later
+aiPolishBtn.addEventListener('click', () => {
+  const raw = rawTermsInput.value.trim();
+  if (!raw) {
+    showToast('Write your terms first, then polish them.');
+    return;
+  }
+  // TODO: POST to Groq endpoint, replace rawTermsInput.value with response
+  showToast('AI polish coming soon — Groq integration next.', 3000);
 });
 
 
@@ -234,29 +266,31 @@ function updateWizardUI() {
     step.classList.toggle('hidden', i !== currentStep - 1);
   });
 
-  // Progress bar & label
   const pct = (currentStep / TOTAL_STEPS) * 100;
   progressBar.style.width = `${pct}%`;
   stepLabel.textContent = `Step ${currentStep} of ${TOTAL_STEPS}`;
 
-  // Back button
   prevBtn.classList.toggle('invisible', currentStep === 1);
 
-  // Next / Submit button
-  if (currentStep === TOTAL_STEPS) {
+  // Step 3 is the crossroads — hide the Continue button, it's handled by the two choice buttons
+  if (currentStep === 3) {
+    nextBtn.classList.add('invisible');
+  } else if (currentStep === TOTAL_STEPS) {
+    nextBtn.classList.remove('invisible');
     nextBtn.textContent = 'Authorize & Submit';
     nextBtn.className = 'px-6 py-2.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm transition-all';
   } else {
+    nextBtn.classList.remove('invisible');
     nextBtn.textContent = 'Continue →';
     nextBtn.className = 'px-6 py-2.5 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition-all';
   }
 }
 
 function validateCurrentStep() {
-  const currentStepEl = steps[currentStep - 1];
+  // Step 3 (crossroads) has no fields — choices are handled by buttons
+  if (currentStep === 3) return true;
 
-  // Collect all required fields in the visible step
-  // (textarea[required] needs special handling since .value can be empty string)
+  const currentStepEl = steps[currentStep - 1];
   const fields = currentStepEl.querySelectorAll('input[required], textarea[required], select[required]');
   let valid = true;
 
@@ -266,10 +300,7 @@ function validateCurrentStep() {
     if (empty) valid = false;
   });
 
-  if (!valid) {
-    showToast('Please fill in all required fields before continuing.');
-  }
-
+  if (!valid) showToast('Please fill in all required fields before continuing.');
   return valid;
 }
 
@@ -279,10 +310,7 @@ nextBtn.addEventListener('click', () => {
   if (currentStep < TOTAL_STEPS) {
     currentStep++;
     updateWizardUI();
-
-    if (currentStep === 3) {
-      initCanvas();
-    }
+    if (currentStep === TOTAL_STEPS) initCanvas();
   } else {
     submitAgreement();
   }
@@ -290,17 +318,221 @@ nextBtn.addEventListener('click', () => {
 
 prevBtn.addEventListener('click', () => {
   if (currentStep > 1) {
+    // If stepping back from signature to crossroads, reset verification state
+    if (currentStep === TOTAL_STEPS) {
+      resetVerificationState();
+    }
     currentStep--;
     updateWizardUI();
   }
 });
 
-// Clear error state on input
 document.addEventListener('input', e => {
   if (e.target.classList.contains('error')) {
     e.target.classList.remove('error');
   }
 });
+
+
+// ─── VERIFICATION CROSSROADS ─────────────────
+
+// "Verify My Identity" chosen
+chooseVerifyBtn.addEventListener('click', () => {
+  showNinModal();
+});
+
+// "Skip Verification" chosen
+chooseSkipBtn.addEventListener('click', () => {
+  openModal(skipWarningModal);
+});
+
+// Skip warning — go back
+skipWarningBackBtn.addEventListener('click', () => {
+  closeModal(skipWarningModal);
+});
+
+// Skip warning — confirm skip
+skipWarningConfirmBtn.addEventListener('click', () => {
+  closeModal(skipWarningModal);
+  verificationState.chosen = 'skipped';
+  proceedToSignature();
+});
+
+
+// ─── NIN MODAL ───────────────────────────────
+
+function showNinModal() {
+  setNinModalState('input');
+  ninInput.value = '';
+  ninInputError.classList.add('hidden');
+  ninVerifyBtn.textContent = 'Continue';
+  ninVerifyBtn.disabled = false;
+  openModal(ninModal);
+}
+
+function setNinModalState(state) {
+  // state: 'input' | 'loading' | 'mismatch' | 'match'
+  ninInputState.classList.toggle('hidden',    state !== 'input');
+  ninLoadingState.classList.toggle('hidden',  state !== 'loading');
+  ninMismatchState.classList.toggle('hidden', state !== 'mismatch');
+  ninMatchState.classList.toggle('hidden',    state !== 'match');
+}
+
+// Close NIN modal (cancel)
+ninModalCloseBtn.addEventListener('click', () => {
+  closeModal(ninModal);
+});
+
+// Dynamically update the button label based on NIN length
+ninInput.addEventListener('input', () => {
+  ninInputError.classList.add('hidden');
+  ninInput.classList.remove('error');
+  const len = ninInput.value.replace(/\D/g, '').length;
+  ninVerifyBtn.textContent = len === 11 ? 'Verify & Pay ₦700' : 'Continue';
+});
+
+// Verify button click
+ninVerifyBtn.addEventListener('click', async () => {
+  const nin = ninInput.value.replace(/\D/g, '');
+
+  if (nin.length !== 11) {
+    ninInput.classList.add('error');
+    ninInputError.textContent = 'Please enter a valid 11-digit NIN.';
+    ninInputError.classList.remove('hidden');
+    return;
+  }
+
+  const creatorName = document.getElementById('creatorName').value.trim();
+
+  setNinModalState('loading');
+
+  try {
+    const matched = await verifyNIN(nin, creatorName);
+
+    if (matched) {
+      verificationState.ninValue   = nin;
+      verificationState.ninMatched = true;
+      setNinModalState('match');
+    } else {
+      setNinModalState('mismatch');
+    }
+  } catch (err) {
+    console.error('NIN verification error:', err);
+    setNinModalState('input');
+    ninInputError.textContent = 'Verification service unavailable. Please try again.';
+    ninInputError.classList.remove('hidden');
+  }
+});
+
+// Mismatch — retry
+ninMismatchRetryBtn.addEventListener('click', () => {
+  ninInput.value = '';
+  ninVerifyBtn.textContent = 'Continue';
+  setNinModalState('input');
+});
+
+// Paystack pay button
+paystackPayBtn.addEventListener('click', () => {
+  initiatePaystackPayment();
+});
+
+
+// ─── NIN VERIFICATION API ────────────────────
+// Option C flow: verify NIN FIRST (free call), THEN open Paystack only on match.
+// Replace the stub below with your real Didit / Monnify / NIBSS call.
+
+async function verifyNIN(nin, fullName) {
+  // TODO: POST to your backend — NEVER call a NIN API directly from the browser
+  // (API keys must stay server-side).
+  //
+  // Expected call:
+  //   POST /api/verify-nin
+  //   Body: { nin, fullName }
+  //   Response: { matched: boolean }
+  //
+  // Stub: simulates a 1.5s API call
+  await new Promise(r => setTimeout(r, 1500));
+
+  // For development testing:
+  // Return true if NIN is all same digit (e.g. 11111111111) to simulate a match
+  // Return false for anything else to simulate a mismatch
+  const isTestMatch = /^(\d)\1{10}$/.test(nin);
+  return isTestMatch;
+}
+
+
+// ─── PAYSTACK INTEGRATION ────────────────────
+// Stub ready for your Paystack public key + metadata.
+// When payment succeeds, call onPaymentSuccess().
+
+function initiatePaystackPayment() {
+  // TODO: load Paystack inline JS and call PaystackPop.setup({...}).openIframe()
+  //
+  // Example when you're ready:
+  //
+  // const handler = PaystackPop.setup({
+  //   key: 'pk_live_YOUR_PUBLIC_KEY',
+  //   email: document.getElementById('creatorEmail').value,
+  //   amount: 70000, // in kobo (₦700 = 70000 kobo)
+  //   currency: 'NGN',
+  //   ref: `SIGNAM-${Date.now()}`,
+  //   metadata: {
+  //     nin: verificationState.ninValue,
+  //     creatorName: document.getElementById('creatorName').value,
+  //   },
+  //   callback: (response) => onPaymentSuccess(response.reference),
+  //   onClose: () => showToast('Payment cancelled.'),
+  // });
+  // handler.openIframe();
+  //
+  // For now, simulate a successful payment after 1s:
+  paystackPayBtn.disabled = true;
+  paystackPayBtn.textContent = 'Processing...';
+
+  setTimeout(() => {
+    onPaymentSuccess('MOCK_REF_' + Date.now());
+  }, 1000);
+}
+
+function onPaymentSuccess(reference) {
+  verificationState.paymentDone = true;
+  verificationState.chosen = 'verified';
+
+  console.log('Payment verified. Reference:', reference);
+
+  closeModal(ninModal);
+  proceedToSignature(true);
+}
+
+
+// ─── PROCEED TO SIGNATURE ────────────────────
+
+function proceedToSignature(isVerified = false) {
+  if (isVerified) {
+    // Show NIN verified badge on step 4
+    verifiedBadge.classList.remove('hidden');
+    verifiedBadge.style.display = 'flex';
+
+    // Update live preview
+    previewVerifiedTag.classList.remove('hidden');
+    previewVerificationSection.classList.remove('hidden');
+  }
+
+  currentStep = TOTAL_STEPS;
+  updateWizardUI();
+  initCanvas();
+}
+
+function resetVerificationState() {
+  verificationState.chosen      = null;
+  verificationState.ninValue    = null;
+  verificationState.ninMatched  = false;
+  verificationState.paymentDone = false;
+
+  verifiedBadge.classList.add('hidden');
+  previewVerifiedTag.classList.add('hidden');
+  previewVerificationSection.classList.add('hidden');
+}
 
 
 // ─── SIGNATURE CANVAS ────────────────────────
@@ -319,7 +551,7 @@ function initCanvas() {
 }
 
 window.addEventListener('resize', () => {
-  if (currentStep === 3) initCanvas();
+  if (currentStep === TOTAL_STEPS) initCanvas();
 });
 
 function getXY(e) {
@@ -327,7 +559,7 @@ function getXY(e) {
   if (e.touches?.length) {
     return {
       x: e.touches[0].clientX - rect.left,
-      y: e.touches[0].clientY - rect.top
+      y: e.touches[0].clientY - rect.top,
     };
   }
   return { x: e.clientX - rect.left, y: e.clientY - rect.top };
@@ -348,7 +580,6 @@ function onDraw(e) {
   ctx.stroke();
   if (e.cancelable) e.preventDefault();
 
-  // Hide the hint text once the user starts drawing
   if (!hasDrawn) {
     hasDrawn = true;
     canvasHint.style.display = 'none';
@@ -359,7 +590,6 @@ function onDrawEnd() {
   if (!isDrawing) return;
   isDrawing = false;
 
-  // Mirror to document preview
   const dataURL = canvas.toDataURL();
   previewSigImage.src = dataURL;
   previewSigImage.classList.remove('hidden');
@@ -403,19 +633,28 @@ function submitAgreement() {
 
   const payload = {
     parties: {
-      names:  Array.from(partiesContainer.querySelectorAll('.party-name')).map(i => i.value.trim()),
-      phones: Array.from(partiesContainer.querySelectorAll('.party-phone')).map(i => i.value.trim()),
+      names:        Array.from(partiesContainer.querySelectorAll('.party-name')).map(i => i.value.trim()),
+      phones:       Array.from(partiesContainer.querySelectorAll('.party-phone')).map(i => i.value.trim()),
       creatorEmail: document.getElementById('creatorEmail').value.trim(),
     },
     type:          document.getElementById('agreementType').value,
     rawTerms:      rawTermsInput.value.trim(),
+    verification:  {
+      chosen:      verificationState.chosen,
+      ninVerified: verificationState.ninMatched,
+      paymentDone: verificationState.paymentDone,
+    },
     signatureData: canvas.toDataURL(),
+    createdAt:     new Date().toISOString(),
   };
 
-  console.log('Agreement payload ready:', payload);
+  console.log('Agreement payload ready:', {
+    ...payload,
+    signatureData: '[base64 omitted]',
+  });
 
-  // TODO: wire to Firestore + verification flow (Modal 3 — Crossroads)
-  showToast('Agreement captured. Opening verification step...', 4000);
+  // TODO: POST to Firestore / backend API, then redirect to success page
+  showToast('Agreement captured. Saving to database...', 4000);
 }
 
 
