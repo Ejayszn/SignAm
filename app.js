@@ -532,7 +532,7 @@ aiPolishBtn.addEventListener('click', async () => {
 const data = await res.json();
 if (data.polishedTerms) rawTermsInput.value = data.polishedTerms;
 
-    showToast('Terms polished successfully ✨');
+    showToast('Terms polished successfully');
   } catch (err) {
     showToast('AI failed. Try again.');
   } finally {

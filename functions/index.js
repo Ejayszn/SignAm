@@ -4,7 +4,22 @@ import cors from 'cors';
 import fetch from 'node-fetch';
 
 const app = express();
-app.use(cors({ origin: true }));
+const allowedOrigins = [
+  'http://127.0.0.1:5500',
+  'http://localhost:5500',
+  'https://signamnow.com',
+  'https://www.signamnow.com',
+  'https://ejayszn.github.io'
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS policy'));
+  }
+}));
 app.use(express.json());
 
 // ─── POLISH TERMS ────────────────────────────
