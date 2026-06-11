@@ -1,0 +1,18 @@
+[debug] [2026-06-09T21:14:39.094Z] ----------------------------------------------------------------------
+[debug] [2026-06-09T21:14:39.107Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\emmyo\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js login
+[debug] [2026-06-09T21:14:39.108Z] CLI Version:   15.13.0
+[debug] [2026-06-09T21:14:39.108Z] Platform:      win32
+[debug] [2026-06-09T21:14:39.109Z] Node Version:  v24.11.1
+[debug] [2026-06-09T21:14:39.109Z] Time:          Tue Jun 09 2026 22:14:39 GMT+0100 (West Africa Standard Time)
+[debug] [2026-06-09T21:14:39.109Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-06-09T21:14:39.112Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[info] Already logged in as emmyogs007@gmail.com
+[debug] [2026-06-09T21:14:44.440Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2026-06-09T21:14:44.441Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[debug] [2026-06-09T21:14:49.245Z] Error: Timed out.
+    at Timeout._onTimeout (C:\Users\emmyo\AppData\Roaming\npm\node_modules\firebase-tools\lib\utils.js:309:49)
+    at listOnTimeout (node:internal/timers:605:17)
+    at process.processTimers (node:internal/timers:541:7)
+[error] 
+[error] Error: An unexpected error has occurred.
