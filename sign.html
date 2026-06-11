@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SignAm — Review & Sign Agreement</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .serif-font { font-family: 'Playfair Display', serif; }
+
+    .field {
+      width: 100%;
+      padding: 0.625rem 1rem;
+      border-radius: 0.75rem;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #0f172a;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      outline: none;
+    }
+    .field:focus {
+      border-color: #059669;
+      box-shadow: 0 0 0 3px rgba(5,150,105,0.1);
+      background: #fff;
+    }
+    .field.error {
+      border-color: #f87171;
+      box-shadow: 0 0 0 3px rgba(248,113,113,0.08);
+    }
+
+    /* Inline error text */
+    .field-error {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #ef4444;
+      margin-top: 0.3rem;
+      display: none;
+    }
+    .field-error.visible { display: block; }
+
+    /* Success screen fade-in */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.4s ease forwards; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased min-h-screen pb-16">
+
+  <header class="bg-white border-b border-slate-200 px-4 py-3 mb-6 flex items-center shadow-sm">
+    <div class="flex items-center gap-2 mx-auto sm:mx-0">
+      <div class="w-7 h-7 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-base shadow-sm">S</div>
+      <span class="font-bold text-lg tracking-tight">Sign<span class="text-emerald-600">Am</span></span>
+    </div>
+  </header>
+
+  <main class="max-w-xl mx-auto px-4 space-y-6">
+
+    <!-- Request banner -->
+    <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex gap-3 items-start shadow-sm">
+      <span class="text-xl shrink-0">📩</span>
+      <div>
+        <h2 class="text-sm font-bold text-emerald-950">Agreement Signature Request</h2>
+        <p class="text-xs text-emerald-700 mt-0.5">
+          <span id="inviterName" class="font-bold">—</span> created this official draft and requested your signature.
+        </p>
+      </div>
+    </div>
+
+    <!-- Document paper -->
+    <section class="bg-white p-6 sm:p-8 border border-slate-300 rounded-xl shadow-md space-y-6">
+      <div class="text-center space-y-1 border-b border-slate-200 pb-4">
+        <h1 class="text-base font-bold uppercase tracking-wider serif-font text-slate-900">Memorandum of Understanding</h1>
+        <p class="text-slate-400 font-mono text-[9px]">DOCUMENT ID: <span id="docIdDisplay" class="font-bold">—</span></p>
+      </div>
+
+      <div class="space-y-2">
+        <p class="font-bold border-b border-slate-100 pb-0.5 text-slate-900 font-mono text-[10px] tracking-wide uppercase">1. Parties Involved</p>
+        <div id="partiesList" class="space-y-1 text-xs text-slate-700 pl-1"></div>
+      </div>
+
+      <div class="space-y-2">
+        <p class="font-bold border-b border-slate-100 pb-0.5 text-slate-900 font-mono text-[10px] tracking-wide uppercase">2. Agreed Terms & Covenants</p>
+        <p id="displayTerms" class="text-slate-800 font-medium bg-slate-50 p-3.5 rounded-xl border border-slate-200/60 leading-relaxed text-xs italic"></p>
+      </div>
+
+      <div class="space-y-3">
+        <p class="font-bold border-b border-slate-100 pb-0.5 text-slate-900 font-mono text-[10px] tracking-wide uppercase">3. Signature Status</p>
+        <div id="signaturesGrid" class="grid grid-cols-2 gap-4 pt-1">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Action zone -->
+    <section id="actionZone" class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm">
+
+      <!-- Phase 1: Phone verification -->
+      <div id="verificationPhase" class="space-y-4">
+        <div>
+          <h3 class="text-sm font-bold text-slate-900">Enter your details to unlock signing</h3>
+          <p class="text-xs text-slate-500 mt-0.5">These will be permanently attached to this agreement as your identity record.</p>
+        </div>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Your Full Name</label>
+            <input type="text" id="recipientName" placeholder="Enter your full legal name"
+              class="field" autocomplete="name">
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Your WhatsApp Number</label>
+            <div class="flex gap-2">
+              <input type="tel" id="verifyPhone" placeholder="e.g., 09087654321"
+                class="field flex-1" autocomplete="tel">
+              <button type="button" id="verifyPhoneBtn"
+                class="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold px-5 rounded-xl text-xs transition shrink-0">
+                Continue
+              </button>
+            </div>
+          </div>
+          <p id="verifyError" class="field-error"></p>
+        </div>
+      </div>
+
+      <!-- Phase 2: Signing canvas (hidden until verification passes) -->
+      <div id="signingPhase" class="hidden space-y-4">
+        <div class="border-t border-slate-100 pt-4">
+          <h3 class="text-sm font-bold text-slate-900">Sign with your finger</h3>
+          <p class="text-xs text-slate-500 mt-0.5">By signing below, you fully agree to the terms listed above.</p>
+        </div>
+
+        <div class="relative w-full h-40 bg-slate-50 rounded-xl border-2 border-dashed border-slate-300 overflow-hidden shadow-inner">
+          <!-- Canvas — events attached ONLY after verification passes (see JS) -->
+          <canvas id="receiverCanvas" class="w-full h-full touch-none cursor-crosshair"></canvas>
+          <p id="canvasHint" class="absolute inset-0 flex items-center justify-center text-xs text-slate-400 pointer-events-none select-none font-medium">✍️ Sign here</p>
+        </div>
+
+        <p id="signError" class="field-error"></p>
+
+        <div class="flex justify-between items-center">
+          <button type="button" id="clearReceiverCanvasBtn"
+            class="text-xs font-bold text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-xl transition-colors">
+            🗑️ Clear
+          </button>
+          <button type="button" id="submitSignatureBtn"
+            class="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold py-2.5 px-6 rounded-xl shadow-sm text-xs transition-all">
+            Confirm & Seal Agreement 🟢
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Success screen (hidden until submission) -->
+    <section id="successScreen" class="hidden fade-up bg-emerald-50 border border-emerald-200 rounded-2xl p-8 text-center space-y-4 shadow-sm">
+      <div class="w-14 h-14 rounded-full bg-emerald-600 text-white text-2xl flex items-center justify-center mx-auto font-bold shadow-md">✓</div>
+      <div>
+        <h3 class="text-base font-bold text-slate-900">Agreement Sealed</h3>
+        <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+          Your signature has been permanently appended. This contract is now fully binding and locked for both parties.
+        </p>
+      </div>
+      <div class="bg-white rounded-xl border border-emerald-200 p-3 text-xs font-mono text-emerald-700 font-bold">
+        <span id="finalDocId">—</span>
+      </div>
+      <p class="text-[10px] text-slate-400">A PDF copy will be sent to the agreement creator. Keep your document ID for your records.</p>
+    </section>
+
+  </main>
+
+  <script type="module" src="sign.js"></script>
+</body>
+</html>

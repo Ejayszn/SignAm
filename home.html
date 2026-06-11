@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SignAm — Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    body { 
+      font-family: 'Plus Jakarta Sans', sans-serif; 
+      background-color: #f9fafb; 
+      color: #0f172a;
+    }
+    .serif-font { font-family: 'Playfair Display', serif; }
+
+    /* Premium Smooth Input Fields */
+    .field {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: 0.75rem;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #0f172a;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      outline: none;
+    }
+    .field:focus {
+      border-color: #15803d;
+      box-shadow: 0 0 0 4px rgba(21, 128, 61, 0.08);
+      background: #fff;
+    }
+    .field.error {
+      border-color: #ef4444;
+      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08);
+    }
+
+    /* Cinematic Step Animation */
+    .form-step { animation: stepIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    @keyframes stepIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Modal Overlay & Card Positioning */
+    .modal-wrap {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+      overflow-y: auto;
+    }
+    .modal-wrap.open { display: flex; }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.96) translateY(8px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal-card { animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+    /* Custom Spinner */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin 0.8s linear infinite; }
+
+    /* Verified Pulse */
+    @keyframes verifiedPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(21, 128, 61, 0.3); }
+      50%      { box-shadow: 0 0 0 8px rgba(21, 128, 61, 0); }
+    }
+    .verified-pulse { animation: verifiedPulse 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+
+    /* Toast */
+    #toast { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    #toast.hidden { opacity: 0; transform: translate(-50%, 12px); pointer-events: none; }
+
+    /* ==================== MINIMAL CARDS (TaxC Style) ==================== */
+    .stat-card {
+      background: transparent;
+      border: none;
+      padding: 24px 0;
+      border-bottom: 1.5px solid #e5e7eb;
+      text-align: center;
+    }
+    .stat-card:last-child {
+      border-bottom: none;
+    }
+
+    .agreement-card {
+      background: transparent;
+      border: 1px solid #e5e7eb;
+      border-radius: 20px;
+      padding: 24px;
+      transition: all 0.2s ease;
+    }
+    .agreement-card:hover {
+      border-color: #cbd5e1;
+      background: rgba(255, 255, 255, 0.65);
+      transform: translateY(-2px);
+    }
+
+    /* Skeleton Loaders */
+    .skeleton-loader {
+      background: transparent;
+      border: 1px solid #e5e7eb;
+      border-radius: 20px;
+      height: 100px;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* Empty State */
+    #emptyState {
+      background: transparent;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 24px;
+      padding: 60px 20px;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased min-h-screen">
+
+  <!-- ── HEADER ── -->
+  <header class="bg-[#f9fafb]/95 backdrop-blur-md border-b border-slate-200/70 sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-extrabold text-lg shadow-sm shadow-emerald-600/20">S</div>
+      <span class="font-bold text-xl tracking-tight text-slate-900">Sign<span class="text-emerald-600">Am</span></span>
+    </div>
+    <div class="flex items-center gap-4">
+      <div id="userDisplayBadge" style="display:none;" class="items-center gap-2.5 flex">
+        <div id="avatarContainer" class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-700 font-bold text-xs flex items-center justify-center border border-emerald-200/60 overflow-hidden shadow-inner"></div>
+        <span id="userNameText" class="text-xs font-semibold text-slate-700 hidden sm:inline-block"></span>
+      </div>
+      <div id="ninVerifiedPill" style="display:none;" class="flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-3 py-1 rounded-full">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Verified
+      </div>
+      <button id="authStatusBtn" class="text-xs font-semibold px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200/80 rounded-full text-slate-600 transition-all">
+        Log out
+      </button>
+    </div>
+  </header>
+
+  <!-- ── DASHBOARD ── -->
+  <main class="max-w-4xl mx-auto px-4 py-10 space-y-8">
+
+    <!-- Welcome + Create button -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">Your Agreements</h1>
+        <p class="text-sm text-slate-500 mt-1">All your active and completed contracts securely managed in one place.</p>
+      </div>
+      <button id="createAgreementBtn"
+        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/10 hover:shadow-emerald-600/20 transition-all shrink-0">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+        New Agreement
+      </button>
+    </div>
+
+    <!-- Stats row -->
+    <div class="grid grid-cols-3 gap-6">
+      <div class="stat-card">
+        <p id="statTotal" class="text-3xl font-extrabold text-slate-900 tracking-tight">—</p>
+        <p class="text-xs font-semibold text-slate-400 mt-1 uppercase tracking-wider">Total</p>
+      </div>
+      <div class="stat-card">
+        <p id="statPending" class="text-3xl font-extrabold text-amber-600 tracking-tight">—</p>
+        <p class="text-xs font-semibold text-slate-400 mt-1 uppercase tracking-wider">Pending</p>
+      </div>
+      <div class="stat-card">
+        <p id="statCompleted" class="text-3xl font-extrabold text-emerald-600 tracking-tight">—</p>
+        <p class="text-xs font-semibold text-slate-400 mt-1 uppercase tracking-wider">Completed</p>
+      </div>
+    </div>
+
+    <!-- Agreements list -->
+    <div id="agreementsList" class="space-y-4">
+      <!-- Skeleton loaders -->
+      <div class="skeleton-loader"></div>
+      <div class="skeleton-loader"></div>
+    </div>
+
+    <!-- Empty state -->
+    <div id="emptyState" class="hidden text-center space-y-4">
+      <div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mx-auto text-slate-400">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+      </div>
+      <div class="space-y-1">
+        <h3 class="text-base font-bold text-slate-900">No agreements yet</h3>
+        <p class="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">Create your first agreement and send the secure link to your recipient to get started.</p>
+      </div>
+      <button id="emptyCreateBtn"
+        class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md shadow-emerald-600/10 transition-all">
+        Create First Agreement
+      </button>
+    </div>
+  </main>
+
+
+  <!-- ── CREATION WIZARD MODAL ── -->
+  <div id="wizardModal" class="modal-wrap">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-md" id="wizardBackdrop"></div>
+
+    <div class="modal-card relative bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-lg mx-auto my-4 overflow-hidden">
+
+      <!-- Wizard header -->
+      <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100">
+        <div>
+          <p id="wizardStepLabel" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Step 1 of 4</p>
+          <h2 id="wizardStepTitle" class="text-base font-bold text-slate-900 mt-0.5">Choose your plan</h2>
+        </div>
+        <button id="closeWizardBtn" class="w-8 h-8 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition text-sm">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="h-1 bg-slate-100 relative">
+        <div id="wizardProgress" class="h-full bg-emerald-600 transition-all duration-500 ease-out" style="width:25%"></div>
+      </div>
+
+      <!-- Step content area -->
+      <div class="px-6 py-6 max-h-[65vh] overflow-y-auto">
+
+        <!-- PLAN SELECTOR (Step 0) -->
+        <div id="stepPlan" class="form-step space-y-4">
+          <p class="text-xs text-slate-500">Select the plan setup optimized for your contractual requirements.</p>
+
+          <!-- Individual Plan -->
+<button type="button" id="selectStandardBtn" class="w-full text-left p-5 rounded-2xl border-2 border-slate-200 hover:border-slate-300 bg-white transition-all space-y-3 group focus:outline-none focus:border-emerald-500">
+  <div class="flex items-center justify-between">
+    <span class="text-sm font-bold text-slate-900">Individual Plan</span>
+    <span class="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full">Personal</span>
+  </div>
+  <p class="text-xs text-slate-500 leading-relaxed">Perfect for personal contracts, peer loans, quick freelance engagements, and simple handshakes.</p>
+
+            <div class="grid grid-cols-2 gap-y-1.5 text-[11px] text-slate-400 font-medium pt-1">
+              <span class="flex items-center gap-1.5"><span class="text-emerald-500">✓</span> NIN-Verified Identity</span>
+              <span class="flex items-center gap-1.5"><span class="text-emerald-500">✓</span> Audit Trail Log</span>
+              <span class="flex items-center gap-1.5"><span class="text-emerald-500">✓</span> Tamper-Proof Assets</span>
+            </div>
+          </button>
+
+          <!-- Business Plan -->
+<button type="button" id="selectEnterpriseBtn" class="w-full text-left p-5 rounded-2xl border-2 border-emerald-600 bg-emerald-50/30 hover:bg-emerald-50/50 transition-all space-y-3 focus:outline-none">
+  <div class="flex items-center justify-between">
+    <span class="text-sm font-bold text-emerald-950 flex items-center gap-2">
+      Business Plan
+      <span class="bg-emerald-600 text-[9px] text-white font-extrabold px-2 py-0.5 rounded uppercase tracking-wider">Growth</span>
+    </span>
+    <span class="text-xs font-bold text-white bg-emerald-600 px-3 py-1 rounded-full shadow-sm">₦5,000</span>
+  </div>
+  <p class="text-xs text-emerald-800 leading-relaxed">Tailored for corporate setups — features customized business imagery, legal clauses, and premium document generation.</p>
+
+            <div class="grid grid-cols-2 gap-y-1.5 text-[11px] text-emerald-700 font-semibold pt-1 border-t border-emerald-200/40">
+              <span class="flex items-center gap-1.5"><span>✓</span> Standard Suite Included</span>
+              <span class="flex items-center gap-1.5"><span>✓</span> Custom Branding Logo</span>
+              <span class="flex items-center gap-1.5"><span>✓</span> Corporate Style Palette</span>
+              <span class="flex items-center gap-1.5"><span>✓</span> Master Clause Library</span>
+              <span class="flex items-center gap-1.5"><span>✓</span> Expiry Constraints</span>
+              <span class="flex items-center gap-1.5"><span>✓</span> PDF Generation Export</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- STEP 1: Your Details -->
+        <div id="step1" class="form-step hidden space-y-4">
+          <div class="space-y-3.5">
+            <div>
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Your Full Name</label>
+              <input type="text" id="creatorName" class="field" placeholder="Full legal name" autocomplete="name" required>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">WhatsApp Number</label>
+              <input type="tel" id="creatorPhone" class="field" placeholder="e.g. 08012345678" autocomplete="tel" required>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Email Address</label>
+              <input type="email" id="creatorEmail" class="field" placeholder="name@company.com" autocomplete="email" required>
+            </div>
+          </div>
+
+          <!-- Enterprise-only fields -->
+          <div id="enterpriseStep1Fields" class="hidden space-y-4 pt-4 border-t border-slate-100">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-700">Enterprise Parameters</p>
+            <div>
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Business Name</label>
+              <input type="text" id="businessName" class="field" placeholder="Your company or business name">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Business Logo</label>
+              <div id="logoUploadZone"
+                class="logo-upload-zone w-full h-28 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-emerald-500 hover:bg-slate-50 transition-all">
+                <svg class="w-6 h-6 text-slate-400 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 002-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                <p class="text-xs text-slate-600 font-semibold" id="logoUploadLabel">Click or drag upload file</p>
+                <p class="text-[10px] text-slate-400">PNG or JPG framework up to 2MB</p>
+              </div>
+              <input type="file" id="logoFileInput" accept="image/png,image/jpeg" class="hidden">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Document Theme</label>
+              <div class="grid grid-cols-4 gap-2.5" id="themeSelector">
+                <button type="button" data-theme="classic" class="theme-btn selected flex flex-col items-center gap-1.5 p-2 rounded-xl border-2 border-emerald-500 bg-white text-center">
+                  <div class="w-full h-7 rounded bg-white border border-slate-200 shadow-sm"></div>
+                  <span class="text-[10px] font-bold text-slate-600">Classic</span>
+                </button>
+                <button type="button" data-theme="dark" class="theme-btn flex flex-col items-center gap-1.5 p-2 rounded-xl border-2 border-slate-100 bg-white text-center">
+                  <div class="w-full h-7 rounded bg-slate-900 shadow-sm"></div>
+                  <span class="text-[10px] font-bold text-slate-500">Dark</span>
+                </button>
+                <button type="button" data-theme="gold" class="theme-btn flex flex-col items-center gap-1.5 p-2 rounded-xl border-2 border-slate-100 bg-white text-center">
+                  <div class="w-full h-7 rounded bg-amber-50/60 border border-amber-200/50 shadow-sm"></div>
+                  <span class="text-[10px] font-bold text-slate-500">Gold</span>
+                </button>
+                <button type="button" data-theme="green" class="theme-btn flex flex-col items-center gap-1.5 p-2 rounded-xl border-2 border-slate-100 bg-white text-center">
+                  <div class="w-full h-7 rounded bg-emerald-50 border border-emerald-200 shadow-sm"></div>
+                  <span class="text-[10px] font-bold text-slate-500">Green</span>
+                </button>
+              </div>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Custom Document Title <span class="normal-case font-normal text-slate-400">(optional)</span></label>
+              <input type="text" id="documentTitle" class="field" placeholder='e.g. "Service Agreement", "NDA"'>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: Terms -->
+        <div id="step2" class="form-step hidden space-y-4">
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Agreement Matrix Type</label>
+            <select id="agreementType" class="field appearance-none bg-no-repeat bg-right pr-8" style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%2364748b\' stroke-width=\'2\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M19 9l-7 7-7-7\' /></svg>'); background-size: 1.25rem;">
+              <option value="peer_loan">Money Loan / Borrowing Structure</option>
+              <option value="freelance">Freelance Workspace / Service Delivery</option>
+              <option value="item_rental">Item Rental / Asset Hire Logistics</option>
+              <option value="business_supply">Business Supply / Commercial Trade</option>
+              <option value="nda">Non-Disclosure Agreement (NDA)</option>
+              <option value="custom">Custom Legal Contract Architecture</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+              Draft Execution Terms <span class="normal-case font-normal text-slate-400">(Specify figures, constraints & milestones)</span>
+            </label>
+            <textarea id="rawTerms" rows="5" required
+              placeholder="e.g., I am giving Tunde ₦50,000 today to buy goods. He promises to pay me back completely on or before July 15th, 2026..."
+              class="field resize-none leading-relaxed"></textarea>
+            <button type="button" id="aiPolishBtn"
+              class="mt-2.5 inline-flex items-center gap-1.5 text-xs font-bold text-violet-700 hover:text-violet-800 bg-violet-50 hover:bg-violet-100/80 px-3.5 py-2 rounded-xl transition-all">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 21l8.904-4.473L21 9l-3.473-3.473M9.813 15.904L13.25 12.46M9.813 15.904l3.437-3.443M13.25 12.46l3.443-3.438M13.25 12.46l-3.438-3.443M9.813 15.904L6.375 12.461m0 0L3 9l8.904-4.473L15.375 8M6.375 12.461l3.438-3.438" /></svg>
+              Optimize with ai
+            </button>
+          </div>
+
+          <!-- Enterprise Options -->
+          <div id="enterpriseStep2Fields" class="hidden space-y-4 pt-4 border-t border-slate-100">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-700">Enterprise Add-ons</p>
+            <div>
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Append Core Standard Clauses</label>
+              <div class="space-y-2.5" id="clauseLibrary">
+                <label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200/60 bg-slate-50/30 cursor-pointer hover:bg-slate-50 transition">
+                  <input type="checkbox" class="clause-checkbox mt-0.5 w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500/20" data-clause="penalty">
+                  <div>
+                    <p class="text-xs font-bold text-slate-800">Penalty Adjustment Clause</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5 leading-normal">Enforces legal liability standard late fees over defaulted accounts.</p>
+                  </div>
+                </label>
+                <label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200/60 bg-slate-50/30 cursor-pointer hover:bg-slate-50 transition">
+                  <input type="checkbox" class="clause-checkbox mt-0.5 w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500/20" data-clause="confidentiality">
+                  <div>
+                    <p class="text-xs font-bold text-slate-800">Mutual Confidentiality Framework</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5 leading-normal">Binds all signature entities to non-disclosure privacy guidelines.</p>
+                  </div>
+                </label>
+                <label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200/60 bg-slate-50/30 cursor-pointer hover:bg-slate-50 transition">
+                  <input type="checkbox" class="clause-checkbox mt-0.5 w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500/20" data-clause="dispute">
+                  <div>
+                    <p class="text-xs font-bold text-slate-800">Dispute Resolution Protocol</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5 leading-normal">Requires mandatory arbitration prior to taking alternative litigation steps.</p>
+                  </div>
+                </label>
+                <label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200/60 bg-slate-50/30 cursor-pointer hover:bg-slate-50 transition">
+                  <input type="checkbox" class="clause-checkbox mt-0.5 w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500/20" data-clause="governing_law">
+                  <div>
+                    <p class="text-xs font-bold text-slate-800">Governing Law Declaration</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5 leading-normal">Registers structural jurisdiction underneath the Federal Republic of Nigeria.</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Execution Signing Deadline</label>
+              <input type="date" id="expiryDate" class="field">
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: NIN + Payment -->
+        <div id="step3" class="form-step hidden space-y-4">
+          <!-- Verified state -->
+          <div id="alreadyVerifiedState" class="hidden bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-start gap-3">
+            <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm shrink-0">✓</div>
+            <div>
+              <p class="text-sm font-bold text-emerald-950">Identity Pipeline Verified</p>
+              <p class="text-xs text-emerald-700 mt-0.5 leading-relaxed">Your account profile authentication details verify securely. You can advance straight towards checkout clearance.</p>
+            </div>
+          </div>
+
+          <!-- NIN First-Time input -->
+          <div id="ninFirstTimeState" class="space-y-4">
+            <div class="bg-emerald-50/40 border border-emerald-100 rounded-xl p-4 space-y-2">
+              <p class="text-xs font-bold text-emerald-900 uppercase tracking-wide">Identity Registry Authentication</p>
+              <ul class="space-y-1 text-[11px] text-emerald-800 font-medium list-none">
+                <li class="flex items-center gap-1.5"><span class="text-emerald-600">▪</span> Links valid identity parameters seamlessly</li>
+                <li class="flex items-center gap-1.5"><span class="text-emerald-600">▪</span> Single validation configuration required for complete access</li>
+                <li class="flex items-center gap-1.5"><span class="text-emerald-600">▪</span> Enforceable via terms standard under Nigerian Evidence Act 2011</li>
+              </ul>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">NIN Sequence (11 digits)</label>
+              <input type="tel" id="ninInput" maxlength="11" placeholder="00000000000"
+                class="field tracking-[0.3em] text-center text-lg font-extrabold text-slate-800" autocomplete="off">
+              <p id="ninInputError" class="text-[11px] font-semibold text-red-500 hidden"></p>
+            </div>
+
+            <!-- Loading -->
+            <div id="ninLoadingState" class="hidden text-center py-6 space-y-3">
+              <div class="w-7 h-7 border-3 border-emerald-100 border-t-emerald-600 rounded-full spin mx-auto"></div>
+              <p class="text-xs font-medium text-slate-500">Querying registry network credentials...</p>
+            </div>
+
+            <!-- Error mismatch -->
+            <div id="ninMismatchState" class="hidden bg-red-50 border border-red-100 rounded-xl p-4">
+              <p class="text-xs font-bold text-red-950">Credential Validation Error</p>
+              <p class="text-xs text-red-700 mt-0.5 leading-relaxed">The identity properties retrieved fail matching parameters with account entries. Retry parameters.</p>
+              <button id="ninRetryBtn" class="mt-2.5 text-xs font-bold text-red-600 hover:text-red-700">← Re-attempt Validation</button>
+            </div>
+          </div>
+
+          <!-- Payment Summary -->
+          <div id="paymentSummary" class="hidden space-y-4">
+            <div class="bg-slate-50 border border-slate-200/60 rounded-xl p-4 space-y-2.5">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Transaction Profile Invoice</p>
+              <div class="flex justify-between items-center">
+                <span class="text-xs text-slate-600" id="paymentPlanLabel">Standard Deployment</span>
+                <span class="text-base font-extrabold text-slate-900" id="paymentAmount">₦700</span>
+              </div>
+              <div class="flex justify-between items-center text-[11px] border-t border-slate-200/40 pt-2 text-slate-500">
+                <span>Identity Verification Node</span>
+                <span class="text-emerald-600 font-bold">Completely Covered</span>
+              </div>
+            </div>
+            <button id="paystackPayBtn"
+              class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm transition-all shadow-md shadow-emerald-600/10 hover:shadow-emerald-600/20">
+              Complete Payment Checkout & Continue
+            </button>
+            <p class="text-[10px] text-center text-slate-400">Processed securely through Paystack protocols.</p>
+          </div>
+        </div>
+
+        <!-- STEP 4: Signature -->
+        <div id="step4" class="form-step hidden space-y-4">
+          <div class="flex items-center justify-between gap-3">
+            <p class="text-xs text-slate-500">Apply signature below inside canvas field boundary to execute.</p>
+            <div id="verifiedBadge" class="hidden shrink-0 items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-bold px-2.5 py-1 rounded-full verified-pulse">
+              <span class="w-1 h-1 rounded-full bg-emerald-500"></span> Verified Profile
+            </div>
+          </div>
+
+          <div class="relative w-full h-48 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 overflow-hidden shadow-inner">
+            <canvas id="signatureCanvas" class="w-full h-full touch-none cursor-crosshair"></canvas>
+            <p id="canvasHint" class="absolute inset-0 flex items-center justify-center text-xs text-slate-400 pointer-events-none select-none font-medium">Draw Signature Within Matrix Area</p>
+          </div>
+
+          <div class="flex justify-end">
+            <button type="button" id="clearCanvasBtn" class="text-xs font-bold text-slate-500 hover:text-red-600 bg-slate-100 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors">
+              Clear Canvas
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wizard footer -->
+      <div class="flex justify-between items-center px-6 py-4.5 border-t border-slate-100 bg-slate-50/40">
+        <button type="button" id="wizardPrevBtn" class="px-4 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700 transition-all invisible">
+          Back
+        </button>
+        <button type="button" id="wizardNextBtn" class="px-5 py-2.5 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition-all">
+          Continue
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL: Logout Confirmation -->
+  <div id="logoutModal" class="modal-wrap">
+    <div class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm"></div>
+    <div class="modal-card relative bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 max-w-sm w-full text-center space-y-5">
+      <div class="w-11 h-11 rounded-full bg-red-50 flex items-center justify-center mx-auto text-red-500">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+      </div>
+      <div class="space-y-1">
+        <h3 class="text-base font-bold text-slate-900">Confirm Disconnect Session?</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">Unsaved modifications and wizard active cache streams will be lost automatically.</p>
+      </div>
+      <div class="grid grid-cols-2 gap-3 pt-1">
+        <button id="cancelLogoutBtn" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 rounded-xl text-xs transition-all">Cancel</button>
+        <button id="confirmLogoutBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs transition-all shadow-sm shadow-red-600/10">Disconnect</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION NODE -->
+  <div id="toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] bg-slate-900 text-white text-xs font-semibold px-4.5 py-3 rounded-xl shadow-xl tracking-wide">
+    Operation Message Summary Token
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

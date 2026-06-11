@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SignAm — Secure Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+
+    .field {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: 0.75rem;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #0f172a;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+      outline: none;
+    }
+    .field:focus {
+      border-color: #059669;
+      box-shadow: 0 0 0 3px rgba(5,150,105,0.1);
+      background: #fff;
+    }
+    .field.error {
+      border-color: #f87171;
+      box-shadow: 0 0 0 3px rgba(248,113,113,0.08);
+    }
+
+    /* Inline error message */
+    .field-error {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #ef4444;
+      margin-top: 0.3rem;
+      display: none;
+    }
+    .field-error.visible { display: block; }
+
+    /* Success modal progress shimmer */
+    @keyframes shimmer {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(250%); }
+    }
+    .shimmer-bar {
+      background: linear-gradient(to right, #059669 30%, #34d399 50%, #059669 70%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite linear;
+    }
+
+    /* Modal pop-in */
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.92); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .modal-card { animation: popIn 0.2s ease forwards; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased min-h-screen flex">
+
+  <div class="w-full min-h-screen grid grid-cols-1 lg:grid-cols-12">
+
+    <!-- ── LEFT PANEL ── -->
+    <section class="hidden lg:flex lg:col-span-5 relative bg-emerald-950 items-center justify-center overflow-hidden">
+      <div class="absolute inset-0 bg-gradient-to-t from-emerald-950 via-emerald-900/40 to-transparent z-10"></div>
+      <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80"
+           alt="Trust and security"
+           class="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-overlay scale-105">
+      <div class="relative z-20 p-12 text-white space-y-6 max-w-md">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-emerald-950 font-bold text-lg">S</div>
+          <span class="font-bold text-xl tracking-tight">SignAm</span>
+        </div>
+        <div class="space-y-2">
+          <h1 class="text-3xl font-bold tracking-tight leading-tight">Protect your money and business on the go.</h1>
+          <p class="text-emerald-200/80 text-sm leading-relaxed">Create, sign, and manage legal informal agreements with partners in under three minutes.</p>
+        </div>
+        <div class="pt-4 border-t border-emerald-800/60 flex items-center gap-3">
+          <div class="flex -space-x-2">
+            <div class="w-7 h-7 rounded-full bg-emerald-700 border-2 border-emerald-950 text-[10px] flex items-center justify-center font-bold">✓</div>
+            <div class="w-7 h-7 rounded-full bg-emerald-600 border-2 border-emerald-950 text-[10px] flex items-center justify-center font-bold">🤝</div>
+          </div>
+          <p class="text-[11px] text-emerald-300 font-medium">Trusted by Nigerian freelancers and vendors.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── RIGHT PANEL ── -->
+    <section class="col-span-1 lg:col-span-7 flex flex-col justify-center items-center p-6 sm:p-12 md:p-20 bg-white">
+
+      <!-- Top toggle (desktop) — static HTML, JS swaps text only -->
+      <div class="absolute top-6 right-6 hidden sm:block">
+        <p class="text-xs text-slate-500" id="topToggleText">
+          New to SignAm?
+          <button type="button" id="topToggleBtn" class="text-emerald-600 font-bold hover:underline ml-1">Create an account</button>
+        </p>
+      </div>
+
+      <div class="w-full max-w-sm space-y-6">
+
+        <!-- Mobile header -->
+        <div class="flex flex-col items-center lg:items-start gap-1 lg:hidden text-center">
+          <div class="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold text-xl shadow-md">S</div>
+          <h2 id="mobileTitle" class="text-2xl font-bold tracking-tight mt-2">Welcome Back</h2>
+          <p id="mobileSubtitle" class="text-xs text-slate-500">Sign in to access your agreements workspace</p>
+        </div>
+
+        <!-- Back to home -->
+        <div>
+          <a href="index.html" class="inline-flex items-center gap-1 text-xs font-bold text-slate-400 hover:text-emerald-600 bg-slate-100 hover:bg-emerald-50 px-3 py-1.5 rounded-xl transition-all group">
+            <span class="group-hover:-translate-x-0.5 transition-transform inline-block">←</span> Back to Home
+          </a>
+        </div>
+
+        <!-- Desktop heading — JS updates .textContent, no innerHTML swap needed -->
+        <div>
+          <h1 id="desktopTitle" class="text-2xl font-bold tracking-tight text-slate-900">Welcome back</h1>
+          <p id="desktopSubtitle" class="text-xs text-slate-500 mt-1">Enter your credentials to open your workspace.</p>
+        </div>
+
+        <!-- Global form error banner (hidden by default) -->
+        <div id="formErrorBanner" class="hidden bg-red-50 border border-red-200 text-red-700 text-xs font-semibold px-4 py-3 rounded-xl leading-relaxed"></div>
+
+        <form id="authForm" class="space-y-4" novalidate>
+
+          <!-- Google -->
+          <button type="button" id="googleAuthBtn"
+            class="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold py-3 px-4 rounded-xl transition shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30">
+            <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+              <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.866-3.577-7.866-8s3.536-8 7.866-8c2.46 0 4.105 1.025 5.047 1.926l3.227-3.227C18.207 1.637 15.42.75 12.24.75c-6.215 0-11.25 5.035-11.25 11.25s5.035 11.25 11.25 11.25c6.486 0 10.795-4.56 10.795-10.99 0-.74-.08-1.305-.175-1.975H12.24Z"/>
+            </svg>
+            <span id="googleBtnText">Continue with Google</span>
+          </button>
+
+          <!-- Divider -->
+          <div id="authDividerRow" class="flex items-center">
+            <div class="flex-grow border-t border-slate-100"></div>
+            <span class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">or use email</span>
+            <div class="flex-grow border-t border-slate-100"></div>
+          </div>
+
+          <!-- Full Name (signup only) -->
+          <div id="fullNameRow" class="hidden">
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Full Name</label>
+            <input type="text" id="authName" placeholder="John Doe" autocomplete="name" class="field">
+            <p class="field-error" id="nameError">Please enter your full name.</p>
+          </div>
+
+          <!-- Email -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Email Address</label>
+            <!-- FIX: was type="type" -->
+            <input type="email" id="authEmail" placeholder="name@company.com" required autocomplete="email" class="field">
+            <p class="field-error" id="emailError">Please enter a valid email address.</p>
+          </div>
+
+          <!-- Password block — hidden in recovery mode -->
+          <div id="passwordBlock">
+            <div class="flex justify-between items-center mb-1.5">
+              <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Password</label>
+              <button type="button" id="forgotPasswordLink" class="text-xs font-semibold text-emerald-600 hover:underline">Forgot password?</button>
+            </div>
+
+            <!-- Back to sign-in link (recovery mode only) -->
+            <div id="recoveryBackRow" class="hidden mb-2">
+              <button type="button" id="backToLoginBtn" class="inline-flex items-center gap-1 text-xs font-bold text-slate-400 hover:text-emerald-600 transition-colors">
+                ← Back to Sign In
+              </button>
+            </div>
+
+            <div class="relative flex items-center">
+              <input type="password" id="authPassword" placeholder="••••••••" required autocomplete="current-password"
+                class="field pr-11 tracking-widest">
+              <button type="button" id="togglePasswordVisibilityBtn"
+                class="absolute right-3 p-1 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none">
+                <!-- Eye open -->
+                <svg id="eyeOpenIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                </svg>
+                <!-- Eye closed -->
+                <svg id="eyeClosedIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 hidden">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M21.008 12c-1.292 4.338-5.31 7.5-10.008 7.5a10.42 10.42 0 0 1-2.863-.395M19.02 15.777A10.477 10.477 0 0 0 21.066 12c-1.292-4.338-5.31-7.5-10.066-7.5-1.127 0-2.204.15-3.223.43M3.98 8.223l11.04 11.04m-11.04-11.04L19.02 15.777M15.223 8.777a3 3 0 1 1-4.242 4.242"/>
+                </svg>
+              </button>
+            </div>
+            <p class="field-error" id="passwordError">Password must be at least 6 characters.</p>
+          </div>
+
+          <!-- Remember me (login only) -->
+          <div id="rememberMeRow" class="flex items-center gap-2">
+            <input type="checkbox" id="rememberMe" class="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+            <label for="rememberMe" class="text-xs font-medium text-slate-500 cursor-pointer select-none">Keep me logged in on this device</label>
+          </div>
+
+          <!-- Terms (signup only) — FIX: removed conflicting "hidden flex", using just "hidden" -->
+          <div id="termsAgreementRow" class="hidden items-start gap-2">
+            <input type="checkbox" id="agreeToTerms" class="w-4 h-4 mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer shrink-0">
+            <label for="agreeToTerms" class="text-xs font-medium text-slate-500 select-none leading-relaxed">
+              I agree to the
+              <a href="terms.html" target="_blank" class="text-emerald-600 font-bold hover:underline">Terms of Service</a>
+              and
+              <a href="privacy.html" target="_blank" class="text-emerald-600 font-bold hover:underline">Privacy Policy</a>.
+            </label>
+          </div>
+          <p class="field-error" id="termsError">You must agree to the Terms to create an account.</p>
+
+          <button type="submit" id="submitAuthBtn"
+            class="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold py-3 px-4 rounded-xl transition shadow-sm text-sm mt-2 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 disabled:opacity-60 disabled:cursor-not-allowed">
+            Open My Workspace →
+          </button>
+
+        </form>
+
+        <!-- Footer -->
+        <div class="pt-4 border-t border-slate-100 text-center space-y-3">
+          <p class="text-[11px] text-slate-400 leading-normal">By continuing, you agree to our electronic signature terms.</p>
+          <!-- Bottom toggle (mobile) — JS swaps .textContent only, no innerHTML -->
+          <p class="text-xs text-slate-600 sm:hidden">
+            <span id="bottomToggleLabel">New to SignAm?</span>
+            <button type="button" id="bottomToggleBtn" class="text-emerald-600 font-bold hover:underline ml-0.5">Create an account</button>
+          </p>
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+  <!-- ── SUCCESS MODAL ── -->
+  <!-- FIX: "hidden flex" conflict removed — display toggled via JS classList -->
+  <div id="successModal" class="hidden fixed inset-0 z-50 items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+    <div class="modal-card relative bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 max-w-xs w-full text-center space-y-4">
+      <div class="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center mx-auto text-emerald-600 text-xl font-bold">✓</div>
+      <div>
+        <h3 class="text-base font-bold text-slate-900">Success!</h3>
+        <p id="modalMessage" class="text-xs text-slate-500 mt-1 leading-relaxed">Your action was completed.</p>
+      </div>
+      <div class="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
+        <div class="shimmer-bar h-full w-1/2 rounded-full"></div>
+      </div>
+      <p class="text-[10px] text-slate-400 font-medium">Redirecting you now...</p>
+    </div>
+  </div>
+
+  <script type="module" src="auth.js"></script>
+</body>
+</html>

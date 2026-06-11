@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /agreements/{docId} {
+
+      // Anyone with the link can read the agreement (for sign page)
+      allow read: if true;
+
+      // Only authenticated users can create an agreement
+      allow create: if request.auth != null;
+
+      // Recipient update — allowed without auth (they don't have an account)
+      // but restricted to only the recipient fields
+      allow update: if resource.data.status == 'pending_recipient'
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['recipient', 'status', 'auditTrail']);
+    }
+
+    // User dashboard — each user can only see their own agreements list
+    match /users/{userId}/agreements/{docId} {
+      allow read, write: if request.auth != null 
+        && request.auth.uid == userId;
+    }
+  }
+}
