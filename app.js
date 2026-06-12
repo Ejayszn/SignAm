@@ -449,9 +449,20 @@ wizardNextBtn.addEventListener('click', async () => {
         verifiedBadge.style.display = 'flex';
 
         ninFirstTimeState.classList.add('hidden');
-        paymentSummary.classList.remove('hidden');
-        wizardNextBtn.classList.add('invisible');
-        showToast('Identity verified! Proceed to payment.');
+paymentSummary.classList.remove('hidden');
+wizardNextBtn.classList.add('invisible');
+
+if (ninFullName) {
+  const nameConfirm = document.createElement('div');
+  nameConfirm.className = 'flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3';
+  nameConfirm.innerHTML = `
+    <span class="text-emerald-600 text-sm">✓</span>
+    <p class="text-xs text-emerald-800 font-semibold">Verified as: <span class="font-extrabold">${ninFullName}</span></p>
+  `;
+  paymentSummary.insertAdjacentElement('beforebegin', nameConfirm);
+}
+
+showToast('Identity verified! Proceed to payment.');
       } else {
         ninFirstTimeState.querySelector('.space-y-1\\.5')?.classList.remove('hidden');
         ninMismatchState.classList.remove('hidden');
@@ -603,7 +614,7 @@ if (data.polishedTerms) rawTermsInput.value = data.polishedTerms;
 // ─── STEP 3: NIN + PAYMENT ───────────────────
 
 function renderStep3() {
-  const amountText = state.plan === 'enterprise' ? '₦5,000' : '₦700';
+  const amountText = state.plan === 'enterprise' ? '₦8,000' : '₦500';
   paymentAmount.textContent    = amountText;
   paymentPlanLabel.textContent = state.plan === 'enterprise' ? 'Enterprise Agreement' : 'Standard Agreement';
   paystackPayBtn.textContent   = `Pay ${amountText} & Continue →`;
@@ -689,7 +700,7 @@ function initiatePaystackPayment() {
   paystackPayBtn.disabled    = true;
   paystackPayBtn.textContent = 'Opening payment...';
 
-  const amount   = state.plan === 'enterprise' ? 500000 : 70000; // kobo
+  const amount = state.plan === 'enterprise' ? 800000 : 50000; // kobo
   const email    = creatorEmail.value.trim();
   const ref      = `SIGNAM-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
@@ -710,7 +721,7 @@ function initiatePaystackPayment() {
     },
     onClose: () => {
       paystackPayBtn.disabled    = false;
-      paystackPayBtn.textContent = `Pay ${state.plan === 'enterprise' ? '₦5,000' : '₦700'} & Continue →`;
+      paystackPayBtn.textContent = `Pay ${state.plan === 'enterprise' ? '₦8,000' : '₦500'} & Continue →`;
       showToast('Payment cancelled.');
     },
   });
