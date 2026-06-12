@@ -22,6 +22,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
+
 // ─── POLISH TERMS ────────────────────────────
 // POST { rawTerms: string } → { polishedTerms: string }
 
@@ -88,4 +89,92 @@ app.post('/api/polish', async (req, res) => {
   }
 });
 
-export const polishTerms = onRequest({ cors: false, secrets: ["GROQ_API_KEY"] }, app);
+
+// ─── NIN VERIFICATION ────────────────────────
+// POST { nin: string, fullName: string } → { matched: boolean, error?: string }
+//
+// Calls verifyninbvn.com.ng (₦150/call).
+// Compares returned firstname+surname against the submitted fullName
+// using a case-insensitive token match — handles "Emmanuel O. Ejay" vs "EMMANUEL EJAY" etc.
+
+app.post('/api/verify-nin', async (req, res) => {
+  const { nin, fullName } = req.body;
+
+  // Basic input validation
+  if (!nin || !/^\d{11}$/.test(nin.trim())) {
+    return res.status(400).json({ error: 'A valid 11-digit NIN is required.' });
+  }
+  if (!fullName?.trim()) {
+    return res.status(400).json({ error: 'fullName is required for matching.' });
+  }
+
+  const ninApiKey = process.env.VERIFYNINBVN_API_KEY;
+  if (!ninApiKey) {
+    return res.status(500).json({ error: 'Server configuration error.' });
+  }
+
+  try {
+    const ninRes = await fetch('http://verifyninbvn.com.ng/api/nin-verification', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ninApiKey,
+      },
+      body: JSON.stringify({
+      nin: nin.trim(),
+      consent: true,
+    }),
+  });
+
+    // Surface provider errors clearly
+    if (!ninRes.ok) {
+      const errText = await ninRes.text();
+      console.error('verifyninbvn error:', ninRes.status, errText);
+      return res.status(502).json({ error: 'NIN verification service unavailable. Try again.' });
+    }
+
+    const ninData = await ninRes.json();
+
+    // Provider returns status: 'success' on a valid NIN
+    if (ninData.status !== 'success' || !ninData.data) {
+      // NIN not found in database
+      return res.json({ matched: false });
+    }
+
+    const { firstname = '', middlename = '', surname = '' } = ninData.data;
+
+    // Build a set of name tokens from the NIN record
+    const ninTokens = new Set(
+      [firstname, middlename, surname]
+        .join(' ')
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(Boolean)
+    );
+
+    // Build tokens from the submitted name
+    const inputTokens = fullName
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(t => t.length > 1); // ignore single initials like "O."
+
+    // Match: at least 2 tokens from input must appear in the NIN record
+    // (catches "Emmanuel Ejay" matching "EMMANUEL ONYEKACHI EJAY")
+    const matchCount = inputTokens.filter(t => ninTokens.has(t)).length;
+    const matched = matchCount >= 2;
+
+    return res.json({ matched });
+
+  } catch (err) {
+    console.error('NIN verification error:', err);
+    return res.status(500).json({ error: 'Internal error during NIN verification.' });
+  }
+});
+
+
+// ─── EXPORT ──────────────────────────────────
+
+export const polishTerms = onRequest(
+  { cors: false, secrets: ['GROQ_API_KEY', 'VERIFYNINBVN_API_KEY'] },
+  app
+);

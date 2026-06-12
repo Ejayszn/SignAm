@@ -7,7 +7,7 @@ import { initializeApp }         from "https://www.gstatic.com/firebasejs/10.13.
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, setDoc,
-  collection, getDocs, orderBy, query,
+  collection, getDocs, orderBy, query, where,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import {
@@ -370,8 +370,10 @@ function showWizardStep(stepIndex) {
 
   // Step 3: hide next button — navigation handled by NIN/payment flow
   if (stepIndex === 3) {
-    wizardNextBtn.classList.add('invisible');
-  } else if (stepIndex === state.TOTAL_STEPS) {
+  wizardNextBtn.classList.remove('invisible');
+  wizardNextBtn.textContent = 'Verify NIN →';
+  wizardNextBtn.className = 'px-6 py-2.5 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition-all';
+} else if (stepIndex === state.TOTAL_STEPS) {
     wizardNextBtn.classList.remove('invisible');
     wizardNextBtn.textContent = 'Authorize & Submit';
     wizardNextBtn.className = 'px-6 py-2.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm transition-all';
@@ -545,19 +547,19 @@ if (data.polishedTerms) rawTermsInput.value = data.polishedTerms;
 // ─── STEP 3: NIN + PAYMENT ───────────────────
 
 function renderStep3() {
-  const amount = state.plan === 'enterprise' ? '₦5,000' : '₦700';
-  paystackBtnAmount.textContent = amount;
-  paymentAmount.textContent     = amount;
-  paymentPlanLabel.textContent  = state.plan === 'enterprise' ? 'Enterprise Agreement' : 'Standard Agreement';
+  const amountText = state.plan === 'enterprise' ? '₦5,000' : '₦700';
+  paymentAmount.textContent    = amountText;
+  paymentPlanLabel.textContent = state.plan === 'enterprise' ? 'Enterprise Agreement' : 'Standard Agreement';
+  paystackPayBtn.textContent   = `Pay ${amountText} & Continue →`;
 
   if (state.ninVerified) {
-    // Already verified — skip straight to payment
-    alreadyVerifiedState.classList.remove('hidden');
-    ninFirstTimeState.classList.add('hidden');
-    paymentSummary.classList.remove('hidden');
-    verifiedBadge.classList.remove('hidden');
-    verifiedBadge.style.display = 'flex';
-  } else {
+  alreadyVerifiedState.classList.remove('hidden');
+  ninFirstTimeState.classList.add('hidden');
+  paymentSummary.classList.remove('hidden');
+  verifiedBadge.classList.remove('hidden');
+  verifiedBadge.style.display = 'flex';
+  wizardNextBtn.classList.add('invisible'); // hide it — paystackPayBtn handles payment
+} else {
     alreadyVerifiedState.classList.add('hidden');
     ninFirstTimeState.classList.remove('hidden');
     paymentSummary.classList.add('hidden');
@@ -570,6 +572,14 @@ ninInput.addEventListener('input', () => {
   ninInput.classList.remove('error');
   const len = ninInput.value.replace(/\D/g, '').length;
   wizardNextBtn.textContent = len === 11 ? 'Verify NIN →' : 'Continue →';
+});
+
+// Block non-digit input
+ninInput.addEventListener('keydown', (e) => {
+  const allowed = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab'];
+  if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) {
+    e.preventDefault();
+  }
 });
 
 // Trigger NIN verification when on step 3 and next is clicked
@@ -632,39 +642,69 @@ ninRetryBtn.addEventListener('click', () => {
 paystackPayBtn.addEventListener('click', initiatePaystackPayment);
 
 
-// ─── NIN VERIFICATION STUB ───────────────────
-// TODO: Replace with POST /api/verify-nin { nin, fullName } → { matched: boolean }
+// ─────────────────────────────────────────────
+//  app.js PATCHES
+//  Drop these in to replace the two stub sections
+// ─────────────────────────────────────────────
+
+
+// ─── PATCH 1: verifyNIN() ────────────────────
+// Replace the existing verifyNIN stub (~line 300) with this.
+// The function is called as: await verifyNIN(nin, creatorName.value.trim())
 
 async function verifyNIN(nin, fullName) {
-  await new Promise(r => setTimeout(r, 1500));
-  // Test: all same digit = match (e.g. 11111111111)
-  return /^(\d)\1{10}$/.test(nin);
+  const res = await fetch('https://polishterms-gqjepwevuq-uc.a.run.app/api/verify-nin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nin, fullName }),
+  });
+
+  if (!res.ok) {
+    // Surface server errors so the catch block in the wizard handles them
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Verification service error');
+  }
+
+  const data = await res.json();
+  return data.matched === true;
 }
 
 
-// ─── PAYSTACK STUB ───────────────────────────
+// ─── PATCH 2: Paystack integration ───────────
+
+const PAYSTACK_PUBLIC_KEY = 'pk_test_408cb31ecd55db4696350e6401fe9164c7ece94e'; // ← swap in your key
 
 function initiatePaystackPayment() {
-  paystackPayBtn.disabled     = true;
-  paystackPayBtn.textContent  = 'Processing payment...';
+  paystackPayBtn.disabled    = true;
+  paystackPayBtn.textContent = 'Opening payment...';
 
-  // TODO: Replace with real Paystack integration:
-  // const handler = PaystackPop.setup({
-  //   key: 'pk_live_YOUR_KEY',
-  //   email: creatorEmail.value,
-  //   amount: state.plan === 'enterprise' ? 500000 : 70000,
-  //   currency: 'NGN',
-  //   ref: `SIGNAM-${Date.now()}`,
-  //   callback: (res) => onPaymentSuccess(res.reference),
-  //   onClose: () => {
-  //     paystackPayBtn.disabled = false;
-  //     paystackPayBtn.textContent = `Pay ${state.plan === 'enterprise' ? '₦5,000' : '₦700'} & Continue →`;
-  //     showToast('Payment cancelled.');
-  //   },
-  // });
-  // handler.openIframe();
+  const amount   = state.plan === 'enterprise' ? 500000 : 70000; // kobo
+  const email    = creatorEmail.value.trim();
+  const ref      = `SIGNAM-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
-  setTimeout(() => onPaymentSuccess('MOCK_REF_' + Date.now()), 1000);
+  const handler = PaystackPop.setup({
+    key:      PAYSTACK_PUBLIC_KEY,
+    email,
+    amount,
+    currency: 'NGN',
+    ref,
+    metadata: {
+      custom_fields: [
+        { display_name: 'Plan',          variable_name: 'plan',          value: state.plan },
+        { display_name: 'Creator Name',  variable_name: 'creator_name',  value: creatorName.value.trim() },
+      ],
+    },
+    callback: (response) => {
+      onPaymentSuccess(response.reference);
+    },
+    onClose: () => {
+      paystackPayBtn.disabled    = false;
+      paystackPayBtn.textContent = `Pay ${state.plan === 'enterprise' ? '₦5,000' : '₦700'} & Continue →`;
+      showToast('Payment cancelled.');
+    },
+  });
+
+  handler.openIframe();
 }
 
 function onPaymentSuccess(reference) {
