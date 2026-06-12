@@ -104,9 +104,6 @@ app.post('/api/verify-nin', async (req, res) => {
   if (!nin || !/^\d{11}$/.test(nin.trim())) {
     return res.status(400).json({ error: 'A valid 11-digit NIN is required.' });
   }
-  if (!fullName?.trim()) {
-    return res.status(400).json({ error: 'fullName is required for matching.' });
-  }
 
   const ninApiKey = process.env.VERIFYNINBVN_API_KEY;
   if (!ninApiKey) {
@@ -141,29 +138,16 @@ app.post('/api/verify-nin', async (req, res) => {
       return res.json({ matched: false });
     }
 
-    const { firstname = '', middlename = '', surname = '' } = ninData.data;
+    const record = ninData.data || ninData;
+const firstname  = (record.firstname  || '').trim();
+const middlename = (record.middlename || '').trim();
+const surname    = (record.surname    || '').trim();
 
-    // Build a set of name tokens from the NIN record
-    const ninTokens = new Set(
-      [firstname, middlename, surname]
-        .join(' ')
-        .toLowerCase()
-        .split(/\s+/)
-        .filter(Boolean)
-    );
+const fullNameFromNIN = [firstname, middlename, surname]
+  .filter(Boolean)
+  .join(' ');
 
-    // Build tokens from the submitted name
-    const inputTokens = fullName
-      .toLowerCase()
-      .split(/\s+/)
-      .filter(t => t.length > 1); // ignore single initials like "O."
-
-    // Match: at least 2 tokens from input must appear in the NIN record
-    // (catches "Emmanuel Ejay" matching "EMMANUEL ONYEKACHI EJAY")
-    const matchCount = inputTokens.filter(t => ninTokens.has(t)).length;
-    const matched = matchCount >= 2;
-
-    return res.json({ matched });
+return res.json({ matched: true, fullName: fullNameFromNIN });
 
   } catch (err) {
     console.error('NIN verification error:', err);

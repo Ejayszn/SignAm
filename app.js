@@ -409,14 +409,70 @@ document.getElementById('selectEnterpriseBtn').addEventListener('click', () => {
 
 // ─── NAV BUTTONS ─────────────────────────────
 
-wizardNextBtn.addEventListener('click', () => {
+wizardNextBtn.addEventListener('click', async () => {
+  if (state.step === 3) {
+    if (state.paymentDone) return;
+    if (state.ninVerified) return;
+
+    const nin = ninInput.value.replace(/\D/g, '');
+    if (nin.length !== 11) {
+      ninInput.classList.add('error');
+      ninInputError.textContent = 'Please enter a valid 11-digit NIN.';
+      ninInputError.classList.remove('hidden');
+      return;
+    }
+
+    ninFirstTimeState.querySelector('.space-y-1\\.5')?.classList.add('hidden');
+    ninLoadingState.classList.remove('hidden');
+    ninMismatchState.classList.add('hidden');
+    wizardNextBtn.disabled = true;
+
+    try {
+      const { matched, fullName: ninFullName } = await verifyNIN(nin);
+      if (matched && ninFullName) {
+      creatorName.value = ninFullName;
+      creatorName.readOnly = true;
+      creatorName.classList.add('opacity-60', 'cursor-not-allowed');
+    }
+      ninLoadingState.classList.add('hidden');
+
+      if (matched) {
+        await setDoc(doc(db, 'users', currentUser.uid), {
+          ninVerified:   true,
+          ninVerifiedAt: serverTimestamp(),
+        }, { merge: true });
+
+        state.ninVerified     = true;
+        state.ninJustVerified = true;
+        ninVerifiedPill.style.display = 'flex';
+        verifiedBadge.classList.remove('hidden');
+        verifiedBadge.style.display = 'flex';
+
+        ninFirstTimeState.classList.add('hidden');
+        paymentSummary.classList.remove('hidden');
+        wizardNextBtn.classList.add('invisible');
+        showToast('Identity verified! Proceed to payment.');
+      } else {
+        ninFirstTimeState.querySelector('.space-y-1\\.5')?.classList.remove('hidden');
+        ninMismatchState.classList.remove('hidden');
+      }
+    } catch (err) {
+      ninLoadingState.classList.add('hidden');
+      ninFirstTimeState.querySelector('.space-y-1\\.5')?.classList.remove('hidden');
+      ninInputError.textContent = 'Verification service unavailable. Please try again.';
+      ninInputError.classList.remove('hidden');
+    } finally {
+      wizardNextBtn.disabled = false;
+    }
+
+    return; // never fall through
+  }
+
   if (!validateStep(state.step)) return;
 
   if (state.step < state.TOTAL_STEPS) {
     state.step++;
     showWizardStep(state.step);
-
-    // On entering step 3: check NIN status and render appropriately
     if (state.step === 3) renderStep3();
   } else {
     submitAgreement();
@@ -574,64 +630,20 @@ ninInput.addEventListener('input', () => {
   wizardNextBtn.textContent = len === 11 ? 'Verify NIN →' : 'Continue →';
 });
 
-// Block non-digit input
 ninInput.addEventListener('keydown', (e) => {
   const allowed = ['Backspace','Delete','ArrowLeft','ArrowRight','Tab'];
-  if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) {
+  if (!allowed.includes(e.key) && !/^\d$/.test(e.key) && !e.ctrlKey && !e.metaKey) {
     e.preventDefault();
   }
 });
 
-// Trigger NIN verification when on step 3 and next is clicked
-wizardNextBtn.addEventListener('click', async () => {
-  if (state.step !== 3) return;
-  if (state.ninVerified || state.paymentDone) return;
-
-  const nin = ninInput.value.replace(/\D/g, '');
-  if (nin.length !== 11) {
-    ninInput.classList.add('error');
-    ninInputError.textContent = 'Please enter a valid 11-digit NIN.';
-    ninInputError.classList.remove('hidden');
-    return;
-  }
-
-  // Show loading
-  ninFirstTimeState.querySelector('.space-y-1\\.5')?.classList.add('hidden');
-  ninLoadingState.classList.remove('hidden');
-  ninMismatchState.classList.add('hidden');
-
-  try {
-    const matched = await verifyNIN(nin, creatorName.value.trim());
-
-    ninLoadingState.classList.add('hidden');
-
-    if (matched) {
-      // Mark as verified in Firestore
-      await setDoc(doc(db, 'users', currentUser.uid), {
-        ninVerified:   true,
-        ninVerifiedAt: serverTimestamp(),
-      }, { merge: true });
-
-      state.ninVerified     = true;
-      state.ninJustVerified = true;
-      ninVerifiedPill.style.display = 'flex';
-
-      verifiedBadge.classList.remove('hidden');
-      verifiedBadge.style.display = 'flex';
-
-      ninFirstTimeState.classList.add('hidden');
-      paymentSummary.classList.remove('hidden');
-    } else {
-      ninFirstTimeState.querySelector('.space-y-1\\.5')?.classList.remove('hidden');
-      ninMismatchState.classList.remove('hidden');
-    }
-  } catch (err) {
-    ninLoadingState.classList.add('hidden');
-    ninFirstTimeState.querySelector('.space-y-1\\.5')?.classList.remove('hidden');
-    ninInputError.textContent = 'Verification service unavailable. Please try again.';
-    ninInputError.classList.remove('hidden');
-  }
-}, { capture: true }); // capture so this fires before the general next handler
+ninInput.addEventListener('paste', (e) => {
+  e.preventDefault();
+  const pasted = (e.clipboardData || window.clipboardData).getData('text');
+  const digitsOnly = pasted.replace(/\D/g, '').substring(0, 11);
+  ninInput.value = digitsOnly;
+  ninInput.dispatchEvent(new Event('input'));
+});
 
 ninRetryBtn.addEventListener('click', () => {
   ninInput.value = '';
@@ -652,21 +664,20 @@ paystackPayBtn.addEventListener('click', initiatePaystackPayment);
 // Replace the existing verifyNIN stub (~line 300) with this.
 // The function is called as: await verifyNIN(nin, creatorName.value.trim())
 
-async function verifyNIN(nin, fullName) {
+async function verifyNIN(nin) {
   const res = await fetch('https://polishterms-gqjepwevuq-uc.a.run.app/api/verify-nin', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nin, fullName }),
+    body: JSON.stringify({ nin }),
   });
 
   if (!res.ok) {
-    // Surface server errors so the catch block in the wizard handles them
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error || 'Verification service error');
   }
 
   const data = await res.json();
-  return data.matched === true;
+  return { matched: data.matched === true, fullName: data.fullName || null };
 }
 
 
