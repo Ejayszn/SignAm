@@ -283,17 +283,26 @@ function buildAgreementCard(data) {
       <span class="shrink-0 text-[10px] font-bold px-2.5 py-1 rounded-full border ${statusColor}">${statusLabel}</span>
     </div>
     ${data.status !== 'completed' ? `
-    <div class="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2">
-      <input type="text" value="${signLink}" readonly
-        class="flex-1 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-600 focus:outline-none">
-      <button class="copy-link-btn shrink-0 text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition"
-        data-link="${signLink}">Copy</button>
-      <a href="https://wa.me/?text=${encodeURIComponent('Please review and sign this agreement: ' + signLink)}"
-        target="_blank"
-        class="shrink-0 text-xs font-bold text-white bg-[#25D366] hover:bg-[#1ebe5d] px-3 py-1.5 rounded-lg transition">
-        WhatsApp
-      </a>
-    </div>` : ''}
+<div class="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2">
+  <input type="text" value="${signLink}" readonly
+    class="flex-1 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-600 focus:outline-none">
+  <button class="copy-link-btn shrink-0 text-xs font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition"
+    data-link="${signLink}">Copy</button>
+  <a href="https://wa.me/?text=${encodeURIComponent('Please review and sign this agreement: ' + signLink)}"
+    target="_blank"
+    class="shrink-0 text-xs font-bold text-white bg-[#25D366] hover:bg-[#1ebe5d] px-3 py-1.5 rounded-lg transition">
+    WhatsApp
+  </a>
+</div>` : `
+<div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+  <div class="flex items-center gap-1.5 text-[11px] text-emerald-700 font-semibold">
+    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Both parties signed
+  </div>
+  <button class="download-pdf-btn text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5"
+    data-docid="${data.docId}">
+    ⬇ Download PDF
+  </button>
+</div>`}
   `;
 
   // Copy button functionality
@@ -304,6 +313,22 @@ function buildAgreementCard(data) {
       setTimeout(() => e.target.textContent = 'Copy', 2000);
     });
   });
+
+  card.querySelector('.download-pdf-btn')?.addEventListener('click', async (e) => {
+  const btn = e.currentTarget;
+  const docId = btn.dataset.docid;
+  btn.textContent = 'Generating...';
+  btn.disabled = true;
+  try {
+    await generatePDF(docId);
+  } catch (err) {
+    console.error('PDF generation error:', err);
+    showToast('PDF generation failed. Please try again.');
+  } finally {
+    btn.innerHTML = '⬇ Download PDF';
+    btn.disabled = false;
+  }
+});
 
   return card;
 }
@@ -907,6 +932,366 @@ async function submitAgreement() {
   }
 }
 
+// ─── PDF GENERATION ──────────────────────────
+
+async function generatePDF(docId) {
+  // Fetch full agreement data from Firestore
+  const docSnap = await getDoc(doc(db, 'agreements', docId));
+  if (!docSnap.exists()) {
+    showToast('Could not load agreement data for PDF.');
+    return;
+  }
+
+  const data = docSnap.data();
+  const { creator, recipient, agreement, enterprise, plan, auditTrail } = data;
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  const pageW  = 210;
+  const pageH  = 297;
+  const margin = 18;
+  const contentW = pageW - margin * 2;
+  let y = margin;
+
+  // ── Theme colors ──
+  const themes = {
+    classic: { headerBg: [255,255,255], headerText: [15,23,42], accent: [21,128,61] },
+    dark:    { headerBg: [15,23,42],    headerText: [255,255,255], accent: [16,185,129] },
+    gold:    { headerBg: [255,251,235], headerText: [120,53,15],   accent: [180,130,20] },
+    green:   { headerBg: [236,253,245], headerText: [6,78,59],     accent: [21,128,61] },
+  };
+
+  const theme = (plan === 'enterprise' && enterprise?.theme)
+    ? (themes[enterprise.theme] || themes.classic)
+    : themes.classic;
+
+  const accentR = theme.accent[0];
+  const accentG = theme.accent[1];
+  const accentB = theme.accent[2];
+
+  // ── Helper functions ──
+  function setFont(size, style = 'normal', color = [15,23,42]) {
+    pdf.setFontSize(size);
+    pdf.setFont('helvetica', style);
+    pdf.setTextColor(...color);
+  }
+
+  function drawLine(yPos, color = [226,232,240]) {
+    pdf.setDrawColor(...color);
+    pdf.setLineWidth(0.3);
+    pdf.line(margin, yPos, pageW - margin, yPos);
+  }
+
+  function addText(text, x, yPos, options = {}) {
+    pdf.text(text, x, yPos, options);
+  }
+
+  function wrapText(text, x, yPos, maxWidth, lineHeight = 5) {
+    const lines = pdf.splitTextToSize(text, maxWidth);
+    lines.forEach(line => {
+      if (yPos > pageH - margin - 10) {
+        pdf.addPage();
+        yPos = margin + 10;
+      }
+      pdf.text(line, x, yPos);
+      yPos += lineHeight;
+    });
+    return yPos;
+  }
+
+  function checkPage(needed = 20) {
+  if (y + needed > pageH - margin) {
+    pdf.addPage();
+    y = margin + 10;
+  }
+}
+
+function cleanText(text) {
+  return (text || '')
+    .replace(/₦/g, 'NGN ')
+    .replace(/[^\x00-\x7F]/g, '');
+}
+
+  // ── HEADER ──
+  // Header background
+  pdf.setFillColor(...theme.headerBg);
+  pdf.rect(0, 0, pageW, 38, 'F');
+
+  // Enterprise logo (if available)
+  if (plan === 'enterprise' && enterprise?.logoUrl) {
+    try {
+      // Load image as base64
+      const img = await loadImageAsBase64(enterprise.logoUrl);
+      pdf.addImage(img, 'PNG', margin, 8, 22, 22);
+    } catch (_) {
+      // Logo failed to load — skip silently
+    }
+  }
+
+  // SignAm branding or business name
+  const headerX = (plan === 'enterprise' && enterprise?.logoUrl) ? margin + 26 : margin;
+
+  setFont(14, 'bold', theme.headerText);
+  const docTitle = (plan === 'enterprise' && enterprise?.documentTitle)
+    ? enterprise.documentTitle.toUpperCase()
+    : 'MEMORANDUM OF UNDERSTANDING';
+  addText(docTitle, headerX, 18);
+
+  if (plan === 'enterprise' && enterprise?.businessName) {
+    setFont(8, 'normal', theme.headerText);
+    addText(enterprise.businessName, headerX, 25);
+  }
+
+  setFont(7, 'normal', [100,116,139]);
+  addText(`SignAm · Legally Binding Digital Contract`, pageW - margin, 18, { align: 'right' });
+  addText(`Document ID: ${docId}`, pageW - margin, 24, { align: 'right' });
+  addText(`Generated: ${new Date().toLocaleDateString('en-NG', { day: 'numeric', month: 'long', year: 'numeric' })}`, pageW - margin, 29, { align: 'right' });
+
+  // Header bottom line
+  pdf.setDrawColor(accentR, accentG, accentB);
+  pdf.setLineWidth(0.8);
+  pdf.line(0, 38, pageW, 38);
+
+  y = 48;
+
+  // ── PARTIES SECTION ──
+  setFont(7, 'bold', [accentR, accentG, accentB]);
+  addText('1. PARTIES INVOLVED', margin, y);
+  y += 2;
+  drawLine(y);
+  y += 5;
+
+  // Party A box
+  pdf.setFillColor(248, 250, 252);
+  pdf.setDrawColor(226, 232, 240);
+  pdf.setLineWidth(0.3);
+  pdf.roundedRect(margin, y, contentW / 2 - 3, 28, 2, 2, 'FD');
+
+  setFont(7, 'bold', [accentR, accentG, accentB]);
+  addText('PARTY A — CREATOR', margin + 4, y + 6);
+
+  setFont(8, 'bold', [15,23,42]);
+  addText(creator.name || '—', margin + 4, y + 13);
+
+  setFont(7, 'normal', [100,116,139]);
+  addText(creator.phone || '—', margin + 4, y + 19);
+  addText(creator.email || '—', margin + 4, y + 24);
+
+  if (creator.ninVerified) {
+  pdf.setFillColor(accentR, accentG, accentB);
+  pdf.roundedRect(margin + 4, y + 27, 24, 4, 1, 1, 'F');
+  setFont(6, 'bold', [255,255,255]);
+  addText('NIN VERIFIED', margin + 5, y + 30);
+}
+
+  // Party B box
+  const bx = margin + contentW / 2 + 3;
+  pdf.setFillColor(248, 250, 252);
+  pdf.roundedRect(bx, y, contentW / 2 - 3, 28, 2, 2, 'FD');
+
+  setFont(7, 'bold', [accentR, accentG, accentB]);
+  addText('PARTY B — RECIPIENT', bx + 4, y + 6);
+
+  setFont(8, 'bold', [15,23,42]);
+  addText(recipient?.name || '—', bx + 4, y + 13);
+
+  setFont(7, 'normal', [100,116,139]);
+  addText(recipient?.phone || '—', bx + 4, y + 19);
+  addText(`Signed: ${recipient?.signedAt ? new Date(recipient.signedAt).toLocaleDateString('en-NG') : '—'}`, bx + 4, y + 24);
+
+  y += 36;
+
+  // ── AGREEMENT TYPE ──
+  if (agreement?.type) {
+    const typeLabels = {
+      peer_loan: 'Money Loan / Borrowing',
+      freelance: 'Freelance / Service Delivery',
+      item_rental: 'Item Rental / Asset Hire',
+      business_supply: 'Business Supply / Trade',
+      nda: 'Non-Disclosure Agreement',
+      custom: 'Custom Legal Contract',
+    };
+    setFont(7, 'normal', [100,116,139]);
+    addText(`Agreement Type: ${typeLabels[agreement.type] || agreement.type}`, margin, y);
+    y += 8;
+  }
+
+  // ── TERMS SECTION ──
+  checkPage(30);
+  setFont(7, 'bold', [accentR, accentG, accentB]);
+  addText('2. AGREED TERMS & COVENANTS', margin, y);
+  y += 2;
+  drawLine(y);
+  y += 6;
+
+  pdf.setFillColor(248, 250, 252);
+  pdf.setDrawColor(226, 232, 240);
+  pdf.roundedRect(margin, y, contentW, 4, 1, 1, 'FD');
+
+  setFont(8, 'normal', [30,41,59]);
+  const termsText = cleanText(agreement?.polishedTerms || agreement?.rawTerms || 'No terms provided.');
+  y += 4;
+
+  // Terms text with wrapping
+  pdf.setFillColor(248, 250, 252);
+  const termsLines = pdf.splitTextToSize(termsText, contentW - 8);
+  const termsBoxH = termsLines.length * 4.5 + 8;
+  pdf.roundedRect(margin, y, contentW, termsBoxH, 2, 2, 'FD');
+  y += 5;
+
+  setFont(8, 'italic', [51,65,85]);
+  termsLines.forEach(line => {
+    if (y > pageH - margin - 10) {
+      pdf.addPage();
+      y = margin + 10;
+    }
+    addText(line, margin + 4, y);
+    y += 4.5;
+  });
+  y += 6;
+
+  // ── ENTERPRISE CLAUSES ──
+  if (plan === 'enterprise' && agreement?.clauses?.length) {
+    checkPage(20);
+    setFont(7, 'bold', [accentR, accentG, accentB]);
+    addText('3. STANDARD LEGAL CLAUSES', margin, y);
+    y += 2;
+    drawLine(y);
+    y += 6;
+
+    const clauseLabels = {
+      penalty:         { title: 'Penalty Adjustment Clause', text: 'Any default or late payment shall attract a legal liability standard late fee as enforceable under Nigerian law.' },
+      confidentiality: { title: 'Mutual Confidentiality Framework', text: 'All parties are bound to non-disclosure of any proprietary or sensitive information shared in connection with this agreement.' },
+      dispute:         { title: 'Dispute Resolution Protocol', text: 'Any disputes arising from this agreement shall first be submitted to mandatory arbitration before any litigation steps are taken.' },
+      governing_law:   { title: 'Governing Law Declaration', text: 'This agreement is governed by and construed in accordance with the laws of the Federal Republic of Nigeria.' },
+    };
+
+    agreement.clauses.forEach((key, i) => {
+      const clause = clauseLabels[key];
+      if (!clause) return;
+      checkPage(16);
+
+      setFont(7, 'bold', [15,23,42]);
+      addText(`${i + 1}. ${clause.title}`, margin, y);
+      y += 4;
+
+      setFont(7, 'normal', [71,85,105]);
+      y = wrapText(clause.text, margin + 3, y, contentW - 3, 4.5);
+      y += 4;
+    });
+  }
+
+  // ── SIGNATURES SECTION ──
+  const sigSectionNum = (plan === 'enterprise' && agreement?.clauses?.length) ? '4.' : '3.';
+  checkPage(60);
+  setFont(7, 'bold', [accentR, accentG, accentB]);
+  addText(`${sigSectionNum} SIGNATURES`, margin, y);
+  y += 2;
+  drawLine(y);
+  y += 6;
+
+  const sigBoxW = contentW / 2 - 4;
+  const sigBoxH = 40;
+
+  // Creator signature box
+  pdf.setDrawColor(226, 232, 240);
+  pdf.setFillColor(248, 252, 248);
+  pdf.roundedRect(margin, y, sigBoxW, sigBoxH, 2, 2, 'FD');
+
+  setFont(6, 'bold', [100,116,139]);
+  addText('PARTY A SIGNATURE', margin + 3, y + 5);
+  setFont(6, 'normal', [100,116,139]);
+  addText(creator.name, margin + 3, y + 10);
+
+  if (creator.signatureData) {
+    try {
+      pdf.addImage(creator.signatureData, 'PNG', margin + 3, y + 12, sigBoxW - 6, 20);
+    } catch (_) {}
+  }
+
+  setFont(6, 'normal', [100,116,139]);
+  addText(`Signed: ${creator.signedAt ? new Date(creator.signedAt).toLocaleDateString('en-NG') : '—'}`, margin + 3, y + 36);
+
+  // Recipient signature box
+  const rx = margin + sigBoxW + 8;
+  pdf.setFillColor(248, 252, 248);
+  pdf.roundedRect(rx, y, sigBoxW, sigBoxH, 2, 2, 'FD');
+
+  setFont(6, 'bold', [100,116,139]);
+  addText('PARTY B SIGNATURE', rx + 3, y + 5);
+  setFont(6, 'normal', [100,116,139]);
+  addText(recipient?.name || '—', rx + 3, y + 10);
+
+  if (recipient?.signatureData) {
+    try {
+      pdf.addImage(recipient.signatureData, 'PNG', rx + 3, y + 12, sigBoxW - 6, 20);
+    } catch (_) {}
+  }
+
+  setFont(6, 'normal', [100,116,139]);
+  addText(`Signed: ${recipient?.signedAt ? new Date(recipient.signedAt).toLocaleDateString('en-NG') : '—'}`, rx + 3, y + 36);
+
+  y += sigBoxH + 10;
+
+  // ── AUDIT TRAIL ──
+  checkPage(35);
+  setFont(7, 'bold', [accentR, accentG, accentB]);
+  addText('AUDIT TRAIL', margin, y);
+  y += 2;
+  drawLine(y);
+  y += 5;
+
+  pdf.setFillColor(241, 245, 249);
+  pdf.roundedRect(margin, y, contentW, 28, 2, 2, 'F');
+
+  setFont(6, 'normal', [71,85,105]);
+  const auditLines = [
+    `Creator IP: ${auditTrail?.creatorIP || '—'}`,
+    `Recipient IP: ${auditTrail?.recipientIP || '—'}`,
+    `Completed At: ${auditTrail?.completedAt?.toDate ? auditTrail.completedAt.toDate().toLocaleString('en-NG') : '—'}`,
+    `Creator Device: ${(auditTrail?.creatorDevice || '—').substring(0, 80)}`,
+    `Recipient Device: ${(auditTrail?.recipientDevice || '—').substring(0, 80)}`,
+  ];
+
+  auditLines.forEach((line, i) => {
+    addText(line, margin + 4, y + 5 + i * 4.5);
+  });
+
+  y += 35;
+
+  // ── FOOTER ──
+  const totalPages = pdf.internal.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    pdf.setPage(i);
+    pdf.setDrawColor(226, 232, 240);
+    pdf.setLineWidth(0.3);
+    pdf.line(margin, pageH - 12, pageW - margin, pageH - 12);
+    setFont(6, 'normal', [148,163,184]);
+    addText('This document was generated by SignAm (signamnow.com) and is legally binding under the Nigerian Evidence Act 2011.', margin, pageH - 8);
+    addText(`Page ${i} of ${totalPages}`, pageW - margin, pageH - 8, { align: 'right' });
+  }
+
+  // ── DOWNLOAD ──
+  pdf.save(`SignAm-${docId}.pdf`);
+}
+
+// Helper: load image URL as base64
+function loadImageAsBase64(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = img.width;
+      c.height = img.height;
+      c.getContext('2d').drawImage(img, 0, 0);
+      resolve(c.toDataURL('image/png'));
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
 
 // ─── SUCCESS SCREEN ──────────────────────────
 
@@ -933,18 +1318,18 @@ function showSuccessScreen(docId) {
         <p class="font-mono text-xs text-slate-700 break-all">${signLink}</p>
       </div>
       <div class="grid grid-cols-2 gap-2">
-        <button id="successCopyBtn" data-link="${signLink}"
-          class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm">
-          📋 Copy Link
-        </button>
-        <a href="https://wa.me/?text=${msg}" target="_blank"
-          class="w-full bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm flex items-center justify-center">
-          WhatsApp →
-        </a>
-      </div>
-      <button id="successDoneBtn" class="text-xs font-semibold text-slate-400 hover:text-slate-600 transition">
-        Back to Dashboard
-      </button>
+  <button id="successCopyBtn" data-link="${signLink}"
+    class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm">
+    📋 Copy Link
+  </button>
+  <a href="https://wa.me/?text=${msg}" target="_blank"
+    class="w-full bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm flex items-center justify-center">
+    WhatsApp →
+  </a>
+</div>
+<button id="successDoneBtn" class="text-xs font-semibold text-slate-400 hover:text-slate-600 transition">
+  Back to Dashboard
+</button>
     </div>
   `;
 

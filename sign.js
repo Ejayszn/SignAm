@@ -547,9 +547,31 @@ if (creatorUid) {
 }
 
     // Show success screen
-    document.getElementById('actionZone').classList.add('hidden');
-    finalDocId.textContent = activeDocId;
-    successScreen.classList.remove('hidden');
+document.getElementById('actionZone').classList.add('hidden');
+finalDocId.textContent = activeDocId;
+successScreen.classList.remove('hidden');
+
+// Add PDF download button to success screen
+const pdfBtn = document.createElement('button');
+pdfBtn.className = 'w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-2';
+pdfBtn.innerHTML = '⬇ Download Agreement PDF';
+pdfBtn.addEventListener('click', async () => {
+  pdfBtn.textContent = 'Generating PDF...';
+  pdfBtn.disabled = true;
+  try {
+    await generatePDFFromData(activeDocId, agreementData);
+  } catch (err) {
+    console.error('PDF error:', err);
+    pdfBtn.textContent = 'Failed. Try again.';
+  } finally {
+    pdfBtn.innerHTML = '⬇ Download Agreement PDF';
+    pdfBtn.disabled = false;
+  }
+});
+
+// Insert before the last p tag in success screen
+const lastP = successScreen.querySelector('p:last-child');
+successScreen.insertBefore(pdfBtn, lastP);
 
   } catch (err) {
     console.error('Firestore update error:', err);
@@ -580,6 +602,205 @@ function clearError(errorEl, inputEl) {
 
 verifyPhoneInput?.addEventListener('input', () => clearError(verifyError, verifyPhoneInput));
 
+// ─── PDF GENERATION (recipient side) ─────────
+
+async function generatePDFFromData(docId, data) {
+  const { creator, recipient, agreement, enterprise, plan, auditTrail } = data;
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  const pageW = 210, pageH = 297, margin = 18;
+  const contentW = pageW - margin * 2;
+  let y = margin;
+
+  const themes = {
+    classic: { headerBg: [255,255,255], headerText: [15,23,42], accent: [21,128,61] },
+    dark:    { headerBg: [15,23,42],    headerText: [255,255,255], accent: [16,185,129] },
+    gold:    { headerBg: [255,251,235], headerText: [120,53,15],   accent: [180,130,20] },
+    green:   { headerBg: [236,253,245], headerText: [6,78,59],     accent: [21,128,61] },
+  };
+
+  const theme = (plan === 'enterprise' && enterprise?.theme)
+    ? (themes[enterprise.theme] || themes.classic)
+    : themes.classic;
+
+  const [aR, aG, aB] = theme.accent;
+
+  function setFont(size, style = 'normal', color = [15,23,42]) {
+    pdf.setFontSize(size); pdf.setFont('helvetica', style); pdf.setTextColor(...color);
+  }
+  function drawLine(yPos) {
+    pdf.setDrawColor(226,232,240); pdf.setLineWidth(0.3);
+    pdf.line(margin, yPos, pageW - margin, yPos);
+  }
+  function checkPage(needed = 20) {
+    if (y + needed > pageH - margin) { pdf.addPage(); y = margin + 10; }
+  }
+  function wrapText(text, x, yPos, maxW, lh = 4.5) {
+    pdf.splitTextToSize(text, maxW).forEach(line => {
+      if (yPos > pageH - margin - 10) { pdf.addPage(); yPos = margin + 10; }
+      pdf.text(line, x, yPos); yPos += lh;
+    });
+    return yPos;
+  }
+
+  // Header
+  pdf.setFillColor(...theme.headerBg);
+  pdf.rect(0, 0, pageW, 38, 'F');
+
+  if (plan === 'enterprise' && enterprise?.logoUrl) {
+    try {
+      const img = await loadImageAsBase64Sign(enterprise.logoUrl);
+      pdf.addImage(img, 'PNG', margin, 8, 22, 22);
+    } catch (_) {}
+  }
+
+  const hx = (plan === 'enterprise' && enterprise?.logoUrl) ? margin + 26 : margin;
+  setFont(14, 'bold', theme.headerText);
+  pdf.text((plan === 'enterprise' && enterprise?.documentTitle) ? enterprise.documentTitle.toUpperCase() : 'MEMORANDUM OF UNDERSTANDING', hx, 18);
+
+  if (plan === 'enterprise' && enterprise?.businessName) {
+    setFont(8, 'normal', theme.headerText);
+    pdf.text(enterprise.businessName, hx, 25);
+  }
+
+  setFont(7, 'normal', [100,116,139]);
+  pdf.text('SignAm · Legally Binding Digital Contract', pageW - margin, 18, { align: 'right' });
+  pdf.text(`Document ID: ${docId}`, pageW - margin, 24, { align: 'right' });
+  pdf.text(`Generated: ${new Date().toLocaleDateString('en-NG', { day: 'numeric', month: 'long', year: 'numeric' })}`, pageW - margin, 29, { align: 'right' });
+
+  pdf.setDrawColor(aR, aG, aB); pdf.setLineWidth(0.8);
+  pdf.line(0, 38, pageW, 38);
+  y = 48;
+
+  // Parties
+  setFont(7, 'bold', [aR, aG, aB]); pdf.text('1. PARTIES INVOLVED', margin, y);
+  y += 2; drawLine(y); y += 5;
+
+  const sigBoxW = contentW / 2 - 4;
+  pdf.setFillColor(248,250,252); pdf.setDrawColor(226,232,240); pdf.setLineWidth(0.3);
+  pdf.roundedRect(margin, y, sigBoxW, 28, 2, 2, 'FD');
+  setFont(7, 'bold', [aR,aG,aB]); pdf.text('PARTY A — CREATOR', margin+4, y+6);
+  setFont(8, 'bold', [15,23,42]); pdf.text(creator.name||'—', margin+4, y+13);
+  setFont(7, 'normal', [100,116,139]);
+  pdf.text(creator.phone||'—', margin+4, y+19);
+  pdf.text(creator.email||'—', margin+4, y+24);
+
+  const bx = margin + sigBoxW + 8;
+  pdf.setFillColor(248,250,252); pdf.roundedRect(bx, y, sigBoxW, 28, 2, 2, 'FD');
+  setFont(7, 'bold', [aR,aG,aB]); pdf.text('PARTY B — RECIPIENT', bx+4, y+6);
+  setFont(8, 'bold', [15,23,42]); pdf.text(recipient?.name||'—', bx+4, y+13);
+  setFont(7, 'normal', [100,116,139]);
+  pdf.text(recipient?.phone||'—', bx+4, y+19);
+  pdf.text(`Signed: ${recipient?.signedAt ? new Date(recipient.signedAt).toLocaleDateString('en-NG') : '—'}`, bx+4, y+24);
+  y += 36;
+
+  // Terms
+  checkPage(30);
+  setFont(7, 'bold', [aR,aG,aB]); pdf.text('2. AGREED TERMS & COVENANTS', margin, y);
+  y += 2; drawLine(y); y += 6;
+
+  function cleanText(text) {
+  return (text || '')
+    .replace(/₦/g, 'NGN ')
+    .replace(/[^\x00-\x7F]/g, '');
+}
+
+const termsText = cleanText(agreement?.polishedTerms || agreement?.rawTerms || '—');
+  const termsLines = pdf.splitTextToSize(termsText, contentW - 8);
+  const termsBoxH = termsLines.length * 4.5 + 8;
+  pdf.setFillColor(248,250,252); pdf.setDrawColor(226,232,240);
+  pdf.roundedRect(margin, y, contentW, termsBoxH, 2, 2, 'FD');
+  y += 5; setFont(8, 'italic', [51,65,85]);
+  termsLines.forEach(line => {
+    if (y > pageH - margin - 10) { pdf.addPage(); y = margin + 10; }
+    pdf.text(line, margin+4, y); y += 4.5;
+  });
+  y += 6;
+
+  // Clauses
+  if (plan === 'enterprise' && agreement?.clauses?.length) {
+    checkPage(20);
+    setFont(7, 'bold', [aR,aG,aB]); pdf.text('3. STANDARD LEGAL CLAUSES', margin, y);
+    y += 2; drawLine(y); y += 6;
+    const clauseLabels = {
+      penalty:         { title: 'Penalty Adjustment Clause', text: 'Any default or late payment shall attract a legal liability standard late fee as enforceable under Nigerian law.' },
+      confidentiality: { title: 'Mutual Confidentiality Framework', text: 'All parties are bound to non-disclosure of any proprietary or sensitive information shared in connection with this agreement.' },
+      dispute:         { title: 'Dispute Resolution Protocol', text: 'Any disputes arising from this agreement shall first be submitted to mandatory arbitration before any litigation steps are taken.' },
+      governing_law:   { title: 'Governing Law Declaration', text: 'This agreement is governed by and construed in accordance with the laws of the Federal Republic of Nigeria.' },
+    };
+    agreement.clauses.forEach((key, i) => {
+      const clause = clauseLabels[key]; if (!clause) return;
+      checkPage(16);
+      setFont(7, 'bold', [15,23,42]); pdf.text(`${i+1}. ${clause.title}`, margin, y); y += 4;
+      setFont(7, 'normal', [71,85,105]); y = wrapText(clause.text, margin+3, y, contentW-3); y += 4;
+    });
+  }
+
+  // Signatures
+  const sNum = (plan === 'enterprise' && agreement?.clauses?.length) ? '4.' : '3.';
+  checkPage(60);
+  setFont(7, 'bold', [aR,aG,aB]); pdf.text(`${sNum} SIGNATURES`, margin, y);
+  y += 2; drawLine(y); y += 6;
+
+  const sbH = 40;
+  pdf.setFillColor(248,252,248); pdf.setDrawColor(226,232,240);
+  pdf.roundedRect(margin, y, sigBoxW, sbH, 2, 2, 'FD');
+  setFont(6, 'bold', [100,116,139]); pdf.text('PARTY A SIGNATURE', margin+3, y+5);
+  setFont(6, 'normal', [100,116,139]); pdf.text(creator.name, margin+3, y+10);
+  if (creator.signatureData) { try { pdf.addImage(creator.signatureData, 'PNG', margin+3, y+12, sigBoxW-6, 20); } catch(_){} }
+  pdf.text(`Signed: ${creator.signedAt ? new Date(creator.signedAt).toLocaleDateString('en-NG') : '—'}`, margin+3, y+36);
+
+  pdf.setFillColor(248,252,248); pdf.roundedRect(bx, y, sigBoxW, sbH, 2, 2, 'FD');
+  setFont(6, 'bold', [100,116,139]); pdf.text('PARTY B SIGNATURE', bx+3, y+5);
+  setFont(6, 'normal', [100,116,139]); pdf.text(recipient?.name||'—', bx+3, y+10);
+  if (recipient?.signatureData) { try { pdf.addImage(recipient.signatureData, 'PNG', bx+3, y+12, sigBoxW-6, 20); } catch(_){} }
+  pdf.text(`Signed: ${recipient?.signedAt ? new Date(recipient.signedAt).toLocaleDateString('en-NG') : '—'}`, bx+3, y+36);
+  y += sbH + 10;
+
+  // Audit trail
+  checkPage(35);
+  setFont(7, 'bold', [aR,aG,aB]); pdf.text('AUDIT TRAIL', margin, y);
+  y += 2; drawLine(y); y += 5;
+  pdf.setFillColor(241,245,249); pdf.roundedRect(margin, y, contentW, 28, 2, 2, 'F');
+  setFont(6, 'normal', [71,85,105]);
+  [
+    `Creator IP: ${auditTrail?.creatorIP||'—'}`,
+    `Recipient IP: ${auditTrail?.recipientIP||'—'}`,
+    `Completed: ${auditTrail?.completedAt?.toDate ? auditTrail.completedAt.toDate().toLocaleString('en-NG') : '—'}`,
+    `Creator Device: ${(auditTrail?.creatorDevice||'—').substring(0,80)}`,
+    `Recipient Device: ${(auditTrail?.recipientDevice||'—').substring(0,80)}`,
+  ].forEach((line, i) => pdf.text(line, margin+4, y+5+i*4.5));
+  y += 35;
+
+  // Footer on all pages
+  const totalPages = pdf.internal.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    pdf.setPage(i);
+    pdf.setDrawColor(226,232,240); pdf.setLineWidth(0.3);
+    pdf.line(margin, pageH-12, pageW-margin, pageH-12);
+    setFont(6, 'normal', [148,163,184]);
+    pdf.text('This document was generated by SignAm (signamnow.com) and is legally binding under the Nigerian Evidence Act 2011.', margin, pageH-8);
+    pdf.text(`Page ${i} of ${totalPages}`, pageW-margin, pageH-8, { align: 'right' });
+  }
+
+  pdf.save(`SignAm-${docId}.pdf`);
+}
+
+function loadImageAsBase64Sign(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      c.getContext('2d').drawImage(img, 0, 0);
+      resolve(c.toDataURL('image/png'));
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
 
 // ─── INIT ────────────────────────────────────
 
