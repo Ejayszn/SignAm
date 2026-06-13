@@ -10,7 +10,44 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
-    .serif-font { font-family: 'Playfair Display', serif; }
+.serif-font { font-family: 'Playfair Display', serif; }
+
+/* ── GLOWING HOW-IT-WORKS CARDS ── */
+.how-card {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+}
+
+.how-card-slate {
+  box-shadow: 0 0 0 1px #e2e8f0, 0 0 18px 2px rgba(100, 116, 139, 0.15);
+  animation: glowSlate 3s ease-in-out infinite;
+}
+
+.how-card-emerald {
+  box-shadow: 0 0 0 1px #d1fae5, 0 0 18px 2px rgba(16, 185, 129, 0.2);
+  animation: glowEmerald 3s ease-in-out infinite;
+}
+
+.how-card:hover {
+  transform: translateY(-6px) scale(1.01);
+}
+
+.how-card-slate:hover {
+  box-shadow: 0 0 0 1px #cbd5e1, 0 12px 40px rgba(100, 116, 139, 0.25);
+}
+
+.how-card-emerald:hover {
+  box-shadow: 0 0 0 1px #6ee7b7, 0 12px 40px rgba(16, 185, 129, 0.3);
+}
+
+@keyframes glowSlate {
+  0%, 100% { box-shadow: 0 0 0 1px #e2e8f0, 0 0 12px 2px rgba(100, 116, 139, 0.1); }
+  50%       { box-shadow: 0 0 0 1px #cbd5e1, 0 0 24px 6px rgba(100, 116, 139, 0.2); }
+}
+
+@keyframes glowEmerald {
+  0%, 100% { box-shadow: 0 0 0 1px #d1fae5, 0 0 12px 2px rgba(16, 185, 129, 0.15); }
+  50%       { box-shadow: 0 0 0 1px #6ee7b7, 0 0 28px 8px rgba(16, 185, 129, 0.25); }
+}
 
     /* Typing cursor */
     .typing-cursor::after {
@@ -20,6 +57,29 @@
       animation: blink 0.7s infinite steps(2, start);
     }
     @keyframes blink { to { opacity: 0; } }
+
+    /* ── WHY CAROUSEL ── */
+.why-track {
+  animation: scrollCarousel 28s linear infinite;
+}
+
+.why-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes scrollCarousel {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.why-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.why-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+}
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased selection:bg-emerald-500 selection:text-white">
@@ -139,26 +199,29 @@
         <div class="hidden lg:block absolute left-1/2 top-8 bottom-8 w-px bg-slate-200 -translate-x-1/2"></div>
 
         <!-- Your part -->
-        <div class="space-y-8 bg-slate-50/50 border border-slate-200/60 p-6 sm:p-8 rounded-2xl relative">
+        <div class="how-card how-card-slate space-y-8 bg-slate-50/50 border border-slate-200/60 p-6 sm:p-8 rounded-2xl relative">
           <div class="absolute top-4 right-4 bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">YOUR PART</div>
           <h3 class="text-xl font-bold text-slate-900">What You Will Do</h3>
           <div class="space-y-6">
             <div class="flex gap-4">
-              <div class="w-1.5 bg-slate-900 rounded-full my-1 shrink-0"></div>
+              <!-- Thin vertical line replacement -->
+              <div class="w-[1px] bg-slate-300 my-1 shrink-0"></div>
               <div>
                 <h4 class="font-semibold text-slate-900 text-sm">1. Type the terms simply</h4>
                 <p class="text-xs text-slate-600 leading-relaxed mt-0.5">Just enter the details of the deal casually — who is paying what, and the deadline. No legal dictionary needed.</p>
               </div>
             </div>
             <div class="flex gap-4">
-              <div class="w-1.5 bg-slate-900 rounded-full my-1 shrink-0"></div>
+              <!-- Thin vertical line replacement -->
+              <div class="w-[1px] bg-slate-300 my-1 shrink-0"></div>
               <div>
                 <h4 class="font-semibold text-slate-900 text-sm">2. Sign with your finger</h4>
                 <p class="text-xs text-slate-600 leading-relaxed mt-0.5">Draw your signature directly on your mobile screen to make the document formal.</p>
               </div>
             </div>
             <div class="flex gap-4">
-              <div class="w-1.5 bg-slate-900 rounded-full my-1 shrink-0"></div>
+              <!-- Thin vertical line replacement -->
+              <div class="w-[1px] bg-slate-300 my-1 shrink-0"></div>
               <div>
                 <h4 class="font-semibold text-slate-900 text-sm">3. Send the link</h4>
                 <p class="text-xs text-slate-600 leading-relaxed mt-0.5">One button shares the secure agreement page directly into your partner's DM.</p>
@@ -168,26 +231,29 @@
         </div>
 
         <!-- Their part -->
-        <div class="space-y-8 bg-emerald-50/20 border border-emerald-100 p-6 sm:p-8 rounded-2xl relative">
+        <div class="how-card how-card-emerald space-y-8 bg-emerald-50/20 border border-emerald-100 p-6 sm:p-8 rounded-2xl relative">
           <div class="absolute top-4 right-4 bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">THEIR PART</div>
           <h3 class="text-xl font-bold text-slate-900">What the Other Person Sees</h3>
           <div class="space-y-6">
             <div class="flex gap-4">
-              <div class="w-1.5 bg-emerald-500 rounded-full my-1 shrink-0"></div>
+              <!-- Thin vertical line replacement (Matches Left Card exactly) -->
+              <div class="w-[1px] bg-slate-300 my-1 shrink-0"></div>
               <div>
                 <h4 class="font-semibold text-slate-900 text-sm">1. Open the secure link</h4>
                 <p class="text-xs text-slate-600 leading-relaxed mt-0.5">They open the link. The terms are completely locked — they cannot edit the price or deadline after the fact.</p>
               </div>
             </div>
             <div class="flex gap-4">
-              <div class="w-1.5 bg-emerald-500 rounded-full my-1 shrink-0"></div>
+              <!-- Thin vertical line replacement (Matches Left Card exactly) -->
+              <div class="w-[1px] bg-slate-300 my-1 shrink-0"></div>
               <div>
-                <h4 class="font-semibold text-slate-900 text-sm">2. Identity check</h4>
-                <p class="text-xs text-slate-600 leading-relaxed mt-0.5">They verify their identity via NIN — confirming that the person signing is real and accountable. No anonymous sign-offs.</p>
+                <h4 class="font-semibold text-slate-900 text-sm">2. Phone verification</h4>
+                <p class="text-xs text-slate-600 leading-relaxed mt-0.5">They verify their phone number via OTP — confirming the person signing is real and reachable. Their number, IP address, and device are permanently recorded.</p>
               </div>
             </div>
             <div class="flex gap-4">
-              <div class="w-1.5 bg-emerald-500 rounded-full my-1 shrink-0"></div>
+              <!-- Thin vertical line replacement (Matches Left Card exactly) -->
+              <div class="w-[1px] bg-slate-300 my-1 shrink-0"></div>
               <div>
                 <h4 class="font-semibold text-slate-900 text-sm">3. Sign to seal the agreement</h4>
                 <p class="text-xs text-slate-600 leading-relaxed mt-0.5">They sign with their finger. The contract locks instantly and a clean PDF is generated for both parties. Deal closed.</p>
@@ -200,30 +266,89 @@
     </div>
   </section>
 
-  <!-- ── WHY SIGNAM ── -->
-  <section id="why-signam" class="py-20 bg-slate-50 border-t border-b border-slate-200/60">
-    <div class="max-w-6xl mx-auto px-4">
-      <div class="text-center max-w-2xl mx-auto space-y-4 mb-16">
-        <h2 class="text-3xl font-bold tracking-tight text-slate-900">Why Use SignAm Instead of Casual Chats?</h2>
-        <p class="text-slate-600 text-sm">Normal messages can get lost, deleted, or denied. SignAm keeps your business secure.</p>
+<!-- ── WHY SIGNAM ── -->
+<section id="why-signam" class="py-20 bg-slate-50 border-t border-b border-slate-200/60 overflow-hidden">
+  <div class="max-w-6xl mx-auto px-4">
+    <div class="text-center max-w-2xl mx-auto space-y-4 mb-16">
+      <h2 class="text-3xl font-bold tracking-tight text-slate-900">Why Use SignAm Instead of Casual Chats?</h2>
+      <p class="text-slate-600 text-sm">Normal messages can get lost, deleted, or denied. SignAm keeps your business secure.</p>
+    </div>
+  </div>
+
+  <!-- Carousel track — no padding so it bleeds edge to edge -->
+  <div class="relative">
+    <!-- Left fade -->
+    <div class="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-slate-50 to-transparent z-10 pointer-events-none"></div>
+    <!-- Right fade -->
+    <div class="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none"></div>
+
+    <div class="why-track flex gap-6 w-max" id="whyTrack">
+
+      <!-- Card 1 -->
+      <div class="why-card bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-3 w-72 shrink-0">
+        <h3 class="font-bold text-slate-900 text-base">Locked Terms</h3>
+        <p class="text-xs text-slate-600 leading-relaxed">Once you send the link, the other person cannot edit the price or date. What you wrote is what stays — permanently.</p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-3">
-          <h3 class="font-bold text-slate-900 text-base">Locked Terms</h3>
-          <p class="text-xs text-slate-600 leading-relaxed">Once you send the link, the other person cannot edit the price or date. What you wrote is what stays — permanently.</p>
-        </div>
-        <div class="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-3">
-          <h3 class="font-bold text-slate-900 text-base">NIN-Verified Identity</h3>
-          <p class="text-xs text-slate-600 leading-relaxed">Optional NIN verification confirms the person signing is real. It turns a "he said, she said" situation into a legally traceable audit trail.</p>
-        </div>
-        <div class="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-3">
-          <h3 class="font-bold text-slate-900 text-base">Real Proof for Court</h3>
-          <p class="text-xs text-slate-600 leading-relaxed">Secure timestamps and identity records make the final PDF admissible under the Nigerian Evidence Act 2011 if a dispute arises.</p>
-        </div>
+      <!-- Card 2 -->
+      <div class="why-card bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-3 w-72 shrink-0">
+        <h3 class="font-bold text-slate-900 text-base">NIN-Verified Identity</h3>
+        <p class="text-xs text-slate-600 leading-relaxed">NIN verification confirms the person signing is real. It turns a "he said, she said" situation into a legally traceable audit trail.</p>
       </div>
+
+      <!-- Card 3 -->
+      <div class="why-card bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-3 w-72 shrink-0">
+        <h3 class="font-bold text-slate-900 text-base">Real Proof for Court</h3>
+        <p class="text-xs text-slate-600 leading-relaxed">Secure timestamps and identity records make the final PDF admissible under the Nigerian Evidence Act 2011 if a dispute arises.</p>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="why-card bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-3 w-72 shrink-0">
+        <h3 class="font-bold text-slate-900 text-base">They Can't Delete the Evidence</h3>
+        <p class="text-xs text-slate-600 leading-relaxed">Once both parties sign, the agreement is locked in our system permanently. No one can edit it, delete it, or claim it never happened.</p>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="why-card bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-3 w-72 shrink-0">
+        <h3 class="font-bold text-slate-900 text-base">Send it in 10 Seconds</h3>
+        <p class="text-xs text-slate-600 leading-relaxed">Copy the link, paste it in their WhatsApp DM. No apps to download, no account needed on their end. They just open and sign.</p>
+      </div>
+
+      <!-- Card 6 -->
+      <div class="why-card bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-3 w-72 shrink-0">
+        <h3 class="font-bold text-slate-900 text-base">Your Money Has a Paper Trail</h3>
+        <p class="text-xs text-slate-600 leading-relaxed">Every agreement generates a timestamped PDF with both signatures. If they try to deny it, you have court-ready proof — dated, signed, and verified.</p>
+      </div>
+
+      <!-- Duplicate set for seamless loop -->
+      <div class="why-card bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-3 w-72 shrink-0">
+        <h3 class="font-bold text-slate-900 text-base">Locked Terms</h3>
+        <p class="text-xs text-slate-600 leading-relaxed">Once you send the link, the other person cannot edit the price or date. What you wrote is what stays — permanently.</p>
+      </div>
+      <div class="why-card bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-3 w-72 shrink-0">
+        <h3 class="font-bold text-slate-900 text-base">NIN-Verified Identity</h3>
+        <p class="text-xs text-slate-600 leading-relaxed">NIN verification confirms the person signing is real. It turns a "he said, she said" situation into a legally traceable audit trail.</p>
+      </div>
+      <div class="why-card bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-3 w-72 shrink-0">
+        <h3 class="font-bold text-slate-900 text-base">Real Proof for Court</h3>
+        <p class="text-xs text-slate-600 leading-relaxed">Secure timestamps and identity records make the final PDF admissible under the Nigerian Evidence Act 2011 if a dispute arises.</p>
+      </div>
+      <div class="why-card bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-3 w-72 shrink-0">
+        <h3 class="font-bold text-slate-900 text-base">They Can't Delete the Evidence</h3>
+        <p class="text-xs text-slate-600 leading-relaxed">Once both parties sign, the agreement is locked in our system permanently. No one can edit it, delete it, or claim it never happened.</p>
+      </div>
+      <div class="why-card bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-3 w-72 shrink-0">
+        <h3 class="font-bold text-slate-900 text-base">Send it in 10 Seconds</h3>
+        <p class="text-xs text-slate-600 leading-relaxed">Copy the link, paste it in their WhatsApp DM. No apps to download, no account needed on their end. They just open and sign.</p>
+      </div>
+      <div class="why-card bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm space-y-3 w-72 shrink-0">
+        <h3 class="font-bold text-slate-900 text-base">Your Money Has a Paper Trail</h3>
+        <p class="text-xs text-slate-600 leading-relaxed">Every agreement generates a timestamped PDF with both signatures. If they try to deny it, you have court-ready proof — dated, signed, and verified.</p>
+      </div>
+
     </div>
-  </section>
+  </div>
+</section>
 
   <!-- ── PRICING ── -->
   <section id="pricing" class="py-20 bg-white">
@@ -235,54 +360,53 @@
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
 
-        <!-- Free tier -->
-        <div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm space-y-6 relative">
-          <div>
-            <h3 class="text-lg font-bold text-slate-900">Standard</h3>
-            <div class="text-4xl font-extrabold text-slate-900 mt-1">₦0 <span class="text-sm font-medium text-slate-400">/ forever</span></div>
-            <p class="text-xs text-slate-500 mt-1">For quick personal deals and casual business agreements.</p>
-          </div>
-          <hr class="border-slate-100">
-          <ul class="space-y-3 text-xs font-medium text-slate-700">
-            <li class="flex items-center gap-2">✓ Up to 2 agreements per month</li>
-            <li class="flex items-center gap-2">✓ Finger signature canvas</li>
-            <li class="flex items-center gap-2">✓ Shareable agreement link</li>
-            <li class="flex items-center gap-2">✓ Downloadable PDF proof</li>
-            <li class="flex items-center gap-2 text-slate-400">✗ NIN identity verification</li>
-            <li class="flex items-center gap-2 text-slate-400">✗ Certificate of authenticity</li>
-          </ul>
-          <a href="login.html" class="block w-full text-center font-semibold text-sm text-slate-700 bg-slate-100 hover:bg-slate-200 py-3 rounded-xl transition-all">
-            Get Started Free
-          </a>
-        </div>
+        <!-- Standard tier -->
+<div class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm space-y-6 relative">
+  <div>
+    <h3 class="text-lg font-bold text-slate-900">Individual</h3>
+    <div class="text-4xl font-extrabold text-slate-900 mt-1">₦500 <span class="text-sm font-medium text-slate-400">/ agreement</span></div>
+    <p class="text-xs text-slate-500 mt-1">For personal deals, peer loans, and quick freelance handshakes.</p>
+  </div>
+  <hr class="border-slate-100">
+  <ul class="space-y-3 text-xs font-medium text-slate-700">
+    <li class="flex items-center gap-2">✓ NIN identity verification</li>
+    <li class="flex items-center gap-2">✓ Finger signature canvas</li>
+    <li class="flex items-center gap-2">✓ Shareable agreement link</li>
+    <li class="flex items-center gap-2">✓ Downloadable PDF proof</li>
+    <li class="flex items-center gap-2">✓ Full audit trail log</li>
+    <li class="flex items-center gap-2 text-slate-400">✗ Business branding & logo</li>
+  </ul>
+  <a href="login.html" class="block w-full text-center font-semibold text-sm text-slate-700 bg-slate-100 hover:bg-slate-200 py-3 rounded-xl transition-all">
+    Start Agreement →
+  </a>
+</div>
 
-        <!-- Pro tier -->
-        <div class="bg-white border-2 border-emerald-600 rounded-3xl p-8 shadow-xl shadow-emerald-600/10 space-y-6 relative">
-          <div class="absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2 bg-emerald-600 text-white font-bold tracking-wide uppercase text-[10px] px-3 py-1 rounded-full whitespace-nowrap">
-            Most Secure
-          </div>
-          <div>
-            <h3 class="text-lg font-bold text-slate-900">Verified</h3>
-            <div class="text-4xl font-extrabold text-slate-900 mt-1">₦700 <span class="text-sm font-medium text-slate-400">/ agreement</span></div>
-            <p class="text-xs text-slate-500 mt-1">For agreements where the money is serious and accountability matters.</p>
-          </div>
-          <hr class="border-slate-100">
-          <ul class="space-y-3 text-xs font-medium text-slate-700">
-            <li class="flex items-center gap-2">✓ Everything in Standard</li>
-            <li class="flex items-center gap-2 font-semibold text-slate-900">✓ NIN identity verification</li>
-            <li class="flex items-center gap-2 font-semibold text-slate-900">✓ Certificate of authenticity</li>
-            <li class="flex items-center gap-2 font-semibold text-slate-900">✓ Immutable read-only vault link</li>
-            <li class="flex items-center gap-2 font-semibold text-slate-900">✓ Government-backed audit trail</li>
-          </ul>
-          <a href="login.html" class="block w-full text-center font-bold text-sm text-white bg-emerald-600 hover:bg-emerald-700 py-3 rounded-xl transition-all shadow-md shadow-emerald-600/10">
-            Start Verified Agreement →
-          </a>
-        </div>
-
-      </div>
-
-      <p class="text-center text-xs text-slate-400 mt-8">₦700 is charged per agreement at the verification step — only if you choose to verify. No subscriptions, no surprises.</p>
-    </div>
+<!-- Business tier -->
+<div class="bg-white border-2 border-emerald-600 rounded-3xl p-8 shadow-xl shadow-emerald-600/10 space-y-6 relative">
+  <div class="absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2 bg-emerald-600 text-white font-bold tracking-wide uppercase text-[10px] px-3 py-1 rounded-full whitespace-nowrap">
+    For Business
+  </div>
+  <div>
+    <h3 class="text-lg font-bold text-slate-900">Business</h3>
+    <div class="text-4xl font-extrabold text-slate-900 mt-1">₦8,000 <span class="text-sm font-medium text-slate-400">/ agreement</span></div>
+    <p class="text-xs text-slate-500 mt-1">For corporate deals where branding, clauses, and serious accountability matter.</p>
+  </div>
+  <hr class="border-slate-100">
+  <ul class="space-y-3 text-xs font-medium text-slate-700">
+    <li class="flex items-center gap-2">✓ Everything in Individual</li>
+    <li class="flex items-center gap-2 font-semibold text-slate-900">✓ Custom business logo & branding</li>
+    <li class="flex items-center gap-2 font-semibold text-slate-900">✓ Corporate document themes</li>
+    <li class="flex items-center gap-2 font-semibold text-slate-900">✓ Standard legal clause library</li>
+    <li class="flex items-center gap-2 font-semibold text-slate-900">✓ Signing deadline / expiry control</li>
+    <li class="flex items-center gap-2 font-semibold text-slate-900">✓ PDF export with company header</li>
+  </ul>
+  <a href="login.html" class="block w-full text-center font-bold text-sm text-white bg-emerald-600 hover:bg-emerald-700 py-3 rounded-xl transition-all shadow-md shadow-emerald-600/10">
+    Start Business Agreement →
+  </a>
+  </div>
+  </div>
+  <p class="text-center text-xs text-slate-400 mt-8">Pay per agreement. No subscriptions, no hidden fees.</p>
+  </div>
   </section>
 
   <!-- ── FOOTER ── -->

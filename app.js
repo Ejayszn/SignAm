@@ -1320,7 +1320,7 @@ function showSuccessScreen(docId) {
       <div class="grid grid-cols-2 gap-2">
   <button id="successCopyBtn" data-link="${signLink}"
     class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm">
-    📋 Copy Link
+    Copy Link
   </button>
   <a href="https://wa.me/?text=${msg}" target="_blank"
     class="w-full bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm flex items-center justify-center">
@@ -1338,7 +1338,7 @@ function showSuccessScreen(docId) {
   overlay.querySelector('#successCopyBtn').addEventListener('click', (e) => {
     navigator.clipboard.writeText(e.target.dataset.link).then(() => {
       e.target.textContent = '✓ Copied!';
-      setTimeout(() => e.target.textContent = '📋 Copy Link', 2000);
+      setTimeout(() => e.target.textContent = 'Copy Link', 2000);
     });
   });
 
@@ -1347,6 +1347,88 @@ function showSuccessScreen(docId) {
     window.location.reload(); // Reload dashboard to show new agreement
   });
 }
+
+// ─── ONBOARDING STORY MODAL LOGIC ───
+
+let currentStorySlide = 1;
+const TOTAL_STORY_SLIDES = 4;
+
+const storyModal   = document.getElementById('storyModal');
+const storyNextBtn = document.getElementById('storyNextBtn');
+const storyPrevBtn = document.getElementById('storyPrevBtn');
+
+function initStoryModal() {
+  // Check if user has already seen this specific app story
+  const hasSeenStory = localStorage.getItem('signam_story_seen');
+  
+  if (!hasSeenStory) {
+    storyModal.classList.remove('hidden');
+    storyModal.classList.add('flex');
+    renderStorySlide(1);
+  }
+}
+
+function renderStorySlide(slideIndex) {
+  currentStorySlide = slideIndex;
+
+  // Toggle active slide visibility
+  document.querySelectorAll('.story-slide').forEach((slide, idx) => {
+    slide.classList.toggle('hidden', idx !== (slideIndex - 1));
+  });
+
+  // Update Progress Indicator Dots
+  document.querySelectorAll('.story-dot').forEach((dot, idx) => {
+    if (idx === (slideIndex - 1)) {
+      dot.classList.add('bg-emerald-600', 'w-4');
+      dot.classList.remove('bg-slate-200');
+    } else {
+      dot.classList.remove('bg-emerald-600', 'w-4');
+      dot.classList.add('bg-slate-200');
+    }
+  });
+
+  // Handle Button states based on slide progress
+storyPrevBtn.classList.toggle('invisible', slideIndex === 1);
+
+if (slideIndex === 1) {
+  // Slide 1: Next button takes full width, no back button space needed
+  storyNextBtn.textContent = "Next →";
+  storyNextBtn.className = "w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm transition shadow-md shadow-emerald-600/10";
+  storyPrevBtn.classList.add('hidden');
+} else if (slideIndex === TOTAL_STORY_SLIDES) {
+  // Last slide: CTA button
+  storyNextBtn.textContent = "Lock my first deal →";
+  storyNextBtn.className = "w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm transition shadow-md shadow-emerald-600/10";
+  storyPrevBtn.classList.remove('hidden');
+} else {
+  // Middle slides: show back button
+  storyNextBtn.textContent = "Next →";
+  storyNextBtn.className = "w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm transition shadow-md shadow-emerald-600/10";
+  storyPrevBtn.classList.remove('hidden');
+}
+}
+
+// Event Listeners for Story Controls
+storyNextBtn.addEventListener('click', () => {
+  if (currentStorySlide < TOTAL_STORY_SLIDES) {
+    renderStorySlide(currentStorySlide + 1);
+  } else {
+    // Action on last slide: Close and mark as completed
+    localStorage.setItem('signam_story_seen', 'true');
+    storyModal.classList.add('hidden');
+    storyModal.classList.remove('flex');
+    showToast("Welcome to SignAm! Let's lock your first deal.");
+  }
+});
+
+storyPrevBtn.addEventListener('click', () => {
+  if (currentStorySlide > 1) {
+    renderStorySlide(currentStorySlide - 1);
+  }
+});
+
+// Trigger verification once the window resources compile smoothly
+window.addEventListener('DOMContentLoaded', initStoryModal);
 
 
 // ─── LOGOUT ──────────────────────────────────
