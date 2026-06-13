@@ -50,13 +50,17 @@ app.post('/api/polish', async (req, res) => {
         messages: [
           {
             role: 'system',
-            content: `You are a Nigerian legal contract specialist. Rewrite the user's raw agreement terms into clean, professional, legally structured paragraphs. Rules:
-- Preserve ALL names, amounts (₦/Naira), and dates exactly as written
+            content: `You are a Nigerian legal contract specialist. Rewrite the user's raw agreement terms into a clean, professional, court-admissible contract. Rules:
+- Preserve ALL names, amounts (₦/Naira), and dates EXACTLY as written — never invent or change figures
 - Use numbered clauses (1., 2., 3. etc.)
-- Plain English — no complex legal jargon
-- No markdown formatting, no backticks, no headers
-- Start directly with the contract text, no preamble
-- Maximum 300 words`,
+- Each clause must be a complete, self-contained sentence
+- Include a clause establishing governing law as Federal Republic of Nigeria
+- Include a clause stating the agreement is binding from the date of both parties' digital signatures
+- Plain English — no Latin phrases or complex legal jargon
+- No markdown, no asterisks, no backticks, no headers, no bold text
+- Do not address the parties as "Party A" or "Party B" — use their actual names as written
+- Start directly with "This Agreement is entered into between..." 
+- Maximum 350 words`,
           },
           {
             role: 'user',

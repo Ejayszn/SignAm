@@ -7,7 +7,7 @@ import { initializeApp }         from "https://www.gstatic.com/firebasejs/10.13.
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, setDoc,
-  collection, getDocs, orderBy, query, where,
+  collection, getDocs, onSnapshot, orderBy, query, where,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import {
@@ -187,7 +187,7 @@ onAuthStateChanged(auth, async (user) => {
   await checkNinStatus(user.uid);
 
   // Load dashboard agreements
-  await loadDashboard(user.uid);
+  loadDashboard(user.uid);
 });
 
 
@@ -208,16 +208,19 @@ async function checkNinStatus(uid) {
 
 // ─── DASHBOARD ───────────────────────────────
 
-async function loadDashboard(uid) {
-  try {
-    const q = query(
-      collection(db, 'users', uid, 'agreements'),
-      orderBy('createdAt', 'desc')
-    );
-    const snap = await getDocs(q);
+function loadDashboard(uid) {
+  const q = query(
+    collection(db, 'users', uid, 'agreements'),
+    orderBy('createdAt', 'desc')
+  );
 
+  onSnapshot(q, (snap) => {
     // Remove skeleton loaders
     document.querySelectorAll('.skeleton-loader').forEach(el => el.remove());
+
+    // Clear existing cards
+    agreementsList.innerHTML = '';
+    emptyState.classList.add('hidden');
 
     if (snap.empty) {
       emptyState.classList.remove('hidden');
@@ -239,11 +242,11 @@ async function loadDashboard(uid) {
     statPending.textContent   = pending;
     statCompleted.textContent = completed;
 
-  } catch (err) {
-    console.error('Dashboard load error:', err);
+  }, (err) => {
+    console.error('Dashboard listener error:', err);
     document.querySelectorAll('.skeleton-loader').forEach(el => el.remove());
     showToast('Could not load agreements. Please refresh.');
-  }
+  });
 }
 
 function buildAgreementCard(data) {
@@ -542,7 +545,7 @@ logoFileInput.addEventListener('change', (e) => {
   state.logoFile = file;
   const reader = new FileReader();
   reader.onload = (ev) => {
-    logoUploadIcon.textContent = '';
+    if (logoUploadIcon) logoUploadIcon.textContent = '';
     logoUploadZone.style.backgroundImage = `url(${ev.target.result})`;
     logoUploadZone.style.backgroundSize = 'contain';
     logoUploadZone.style.backgroundRepeat = 'no-repeat';
