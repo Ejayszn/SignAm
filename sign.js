@@ -103,10 +103,10 @@ async function loadAgreement() {
     agreementData = docSnap.data();
 
     // Block if already completed
-    if (agreementData.status === 'completed') {
-      showFatalError('This agreement has already been signed by both parties and is now locked.');
-      return;
-    }
+if (agreementData.status === 'completed') {
+  showFatalError('This agreement has already been fully signed by all parties and is now locked.');
+  return;
+}
 
     renderAgreement();
 
@@ -211,36 +211,94 @@ function renderAgreement() {
     custom:          'Custom Legal Contract',
   };
 
-  // Parties list
-  partiesList.innerHTML = `
-    <p class="text-xs text-slate-700">
-      <strong>Party A (Creator):</strong> ${creator.name}
-      ${creator.ninVerified
-        ? '<span class="ml-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">🪪 NIN Verified</span>'
-        : ''}
-    </p>
-    ${agreement.type ? `<p class="text-[10px] text-slate-400 mt-0.5 pl-1">Agreement Type: <span class="font-semibold text-slate-600">${typeLabels[agreement.type] || agreement.type}</span></p>` : ''}
-    <p class="text-xs text-slate-700 mt-1">
-      <strong>Party B (Recipient):</strong>
-      <span class="text-slate-400 italic">Awaiting your details</span>
-    </p>
-  `;
+  const partiesRequired = agreementData.partiesRequired || 2;
+const signatures      = agreementData.signatures || [];
+const signedCount     = signatures.length;
 
-  // Signatures grid
-  signaturesGrid.innerHTML = `
-    <div class="space-y-1">
-      <p class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">${creator.name}</p>
-      <div class="h-14 w-full border border-slate-200 bg-emerald-50/30 rounded-xl flex items-center justify-center p-1">
-        <span class="text-[10px] font-bold text-emerald-700 px-2 py-0.5 bg-emerald-100/50 rounded border border-emerald-200">✍️ SIGNED</span>
-      </div>
-    </div>
-    <div class="space-y-1">
-      <p class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Your Signature</p>
-      <div id="receiverSigPlaceholder" class="h-14 w-full border border-dashed border-amber-300 bg-amber-50/30 rounded-xl flex items-center justify-center text-center">
-        <span class="text-[9px] text-amber-700 font-semibold">Awaiting Your Action</span>
-      </div>
-    </div>
+// Parties list
+let partiesHTML = `
+  <p class="text-xs text-slate-700">
+    <strong>Party A (Creator):</strong> ${creator.name}
+    ${creator.ninVerified
+      ? '<span class="ml-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">NIN Verified</span>'
+      : ''}
+  </p>
+  ${agreement.type ? `<p class="text-[10px] text-slate-400 mt-0.5 pl-1">Agreement Type: <span class="font-semibold text-slate-600">${typeLabels[agreement.type] || agreement.type}</span></p>` : ''}
+`;
+
+const partyLetters = ['B','C','D','E'];
+for (let i = 1; i < partiesRequired; i++) {
+  const sig = signatures[i - 1];
+  partiesHTML += `
+    <p class="text-xs text-slate-700 mt-1">
+      <strong>Party ${partyLetters[i-1]}:</strong>
+      ${sig
+        ? `<span class="text-emerald-700 font-semibold">${sig.name}</span> <span class="text-[10px] text-emerald-600 font-bold">✓ Signed</span>`
+        : '<span class="text-slate-400 italic">Awaiting signature</span>'
+      }
+    </p>
   `;
+}
+partiesList.innerHTML = partiesHTML;
+
+// Signing progress banner
+const progressBanner = document.createElement('div');
+progressBanner.className = 'bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center justify-between';
+progressBanner.innerHTML = `
+  <span class="text-xs font-semibold text-amber-800">${signedCount + 1} of ${partiesRequired} signatures collected</span>
+  <span class="text-[10px] font-bold text-amber-600">${partiesRequired - signedCount - 1} more needed after you</span>
+`;
+if (partiesRequired > 2) {
+  partiesList.appendChild(progressBanner);
+}
+
+// Signatures grid — creator + all collected signatures + pending slots
+let sigGridHTML = `
+  <div class="space-y-1">
+    <p class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">${creator.name} (Creator)</p>
+    <div class="h-14 w-full border border-slate-200 bg-emerald-50/30 rounded-xl flex items-center justify-center p-1">
+      <span class="text-[10px] font-bold text-emerald-700 px-2 py-0.5 bg-emerald-100/50 rounded border border-emerald-200">✍️ SIGNED</span>
+    </div>
+  </div>
+`;
+
+for (let i = 0; i < partiesRequired - 1; i++) {
+  const sig = signatures[i];
+  const label = `Party ${partyLetters[i]}`;
+  if (sig) {
+    sigGridHTML += `
+      <div class="space-y-1">
+        <p class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">${sig.name} (${label})</p>
+        <div class="h-14 w-full border border-slate-200 bg-emerald-50/30 rounded-xl flex items-center justify-center p-1">
+          <span class="text-[10px] font-bold text-emerald-700 px-2 py-0.5 bg-emerald-100/50 rounded border border-emerald-200">✍️ SIGNED</span>
+        </div>
+      </div>
+    `;
+  } else if (i === signedCount) {
+    // This is the slot for the current signer
+    sigGridHTML += `
+      <div class="space-y-1">
+        <p class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">Your Signature (${label})</p>
+        <div id="receiverSigPlaceholder" class="h-14 w-full border border-dashed border-amber-300 bg-amber-50/30 rounded-xl flex items-center justify-center text-center">
+          <span class="text-[9px] text-amber-700 font-semibold">Your Turn to Sign</span>
+        </div>
+      </div>
+    `;
+  } else {
+    sigGridHTML += `
+      <div class="space-y-1">
+        <p class="text-[9px] text-slate-500 uppercase font-bold tracking-wider">${label}</p>
+        <div class="h-14 w-full border border-dashed border-slate-200 bg-slate-50/30 rounded-xl flex items-center justify-center">
+          <span class="text-[9px] text-slate-400 font-semibold">Pending</span>
+        </div>
+      </div>
+    `;
+  }
+}
+
+signaturesGrid.className = `grid gap-4 pt-1`;
+signaturesGrid.style.gridTemplateColumns = `repeat(${Math.min(partiesRequired, 3)}, 1fr)`;
+signaturesGrid.innerHTML = sigGridHTML;
 }
 
 function showFatalError(msg) {
@@ -522,28 +580,51 @@ const recipientPhone = formatPhoneNumber(verifyPhoneInput.value.trim());
   try {
     const docRef = doc(db, 'agreements', activeDocId);
 
-    await updateDoc(docRef, {
-  status: 'completed',
-  recipient: {
-    name:          recipientName,
-    phone:         recipientPhone,
-    signatureData: canvas.toDataURL(),
-    signedAt:      new Date().toISOString(),
-    ipAddress,
-    userAgent:     navigator.userAgent,
-  },
-  'auditTrail.recipientIP':     ipAddress,
-  'auditTrail.recipientDevice': navigator.userAgent,
-  'auditTrail.completedAt':     serverTimestamp(),
-});
+    const partiesRequired = agreementData.partiesRequired || 2;
+const existingSignatures = agreementData.signatures || [];
 
-// Also update the creator's subcollection so their dashboard reflects completion
+const newSignature = {
+  name:          recipientName,
+  phone:         recipientPhone,
+  signatureData: canvas.toDataURL(),
+  signedAt:      new Date().toISOString(),
+  ipAddress,
+  userAgent:     navigator.userAgent,
+  partyIndex:    existingSignatures.length + 1, // Party B=1, C=2 etc
+};
+
+const updatedSignatures = [...existingSignatures, newSignature];
+const isComplete = updatedSignatures.length >= (partiesRequired - 1); // -1 because creator already signed
+
+const updatePayload = {
+  signatures: updatedSignatures,
+  [`auditTrail.party${existingSignatures.length + 2}IP`]: ipAddress,
+  [`auditTrail.party${existingSignatures.length + 2}Device`]: navigator.userAgent,
+};
+
+if (isComplete) {
+  updatePayload.status = 'completed';
+  updatePayload['auditTrail.completedAt'] = serverTimestamp();
+} else {
+  updatePayload.status = 'pending_signatures';
+}
+
+await updateDoc(doc(db, 'agreements', activeDocId), updatePayload);
+
+// After main document update
 const creatorUid = agreementData.creator?.uid;
 if (creatorUid) {
-  const userAgreementRef = doc(db, 'users', creatorUid, 'agreements', activeDocId);
-  await updateDoc(userAgreementRef, {
-    status: 'completed',
-  });
+  try {
+    const userAgreementRef = doc(db, 'users', creatorUid, 'agreements', activeDocId);
+    await updateDoc(userAgreementRef, {
+      status:         isComplete ? 'completed' : 'pending_signatures',
+      signatureCount: updatedSignatures.length,
+    });
+    console.log('Subcollection updated successfully');
+  } catch (subErr) {
+    console.warn('Subcollection update failed (rules or permission):', subErr.message);
+    // Don't fail the whole signing process
+  }
 }
 
     // Show success screen
@@ -551,27 +632,42 @@ document.getElementById('actionZone').classList.add('hidden');
 finalDocId.textContent = activeDocId;
 successScreen.classList.remove('hidden');
 
-// Add PDF download button to success screen
-const pdfBtn = document.createElement('button');
-pdfBtn.className = 'w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-2';
-pdfBtn.innerHTML = '⬇ Download Agreement PDF';
-pdfBtn.addEventListener('click', async () => {
-  pdfBtn.textContent = 'Generating PDF...';
-  pdfBtn.disabled = true;
-  try {
-    await generatePDFFromData(activeDocId, agreementData);
-  } catch (err) {
-    console.error('PDF error:', err);
-    pdfBtn.textContent = 'Failed. Try again.';
-  } finally {
-    pdfBtn.innerHTML = '⬇ Download Agreement PDF';
-    pdfBtn.disabled = false;
-  }
-});
+// Update success message based on whether all parties have signed
+const successMsg = document.querySelector('#successScreen p.text-xs');
+if (successMsg) {
+  successMsg.textContent = isComplete
+    ? 'All parties have signed. This contract is now fully binding and permanently locked.'
+    : `Your signature has been recorded. ${(partiesRequired - 1) - updatedSignatures.length} more signature(s) still needed — share the link with the next party.`;
+}
 
-// Insert before the last p tag in success screen
-const lastP = successScreen.querySelector('p:last-child');
-successScreen.insertBefore(pdfBtn, lastP);
+// Only show PDF download button if this was the final signature
+if (isComplete) {
+  const pdfBtn = document.createElement('button');
+  pdfBtn.className = 'w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-2';
+  pdfBtn.innerHTML = '⬇ Download Agreement PDF';
+  pdfBtn.addEventListener('click', async () => {
+    pdfBtn.textContent = 'Generating PDF...';
+    pdfBtn.disabled = true;
+    try {
+      // Use updated data with all signatures included
+      const updatedData = { ...agreementData, signatures: updatedSignatures };
+      await generatePDFFromData(activeDocId, updatedData);
+    } catch (err) {
+      console.error('PDF error:', err);
+      pdfBtn.textContent = 'Failed. Try again.';
+    } finally {
+      pdfBtn.innerHTML = '⬇ Download Agreement PDF';
+      pdfBtn.disabled = false;
+    }
+  });
+
+  const lastP = successScreen.querySelector('p:last-child');
+  if (lastP && lastP.parentNode) {
+    lastP.parentNode.insertBefore(pdfBtn, lastP);
+  } else {
+    successScreen.appendChild(pdfBtn);
+  }
+}
 
   } catch (err) {
     console.error('Firestore update error:', err);
@@ -744,34 +840,85 @@ const termsText = cleanText(agreement?.polishedTerms || agreement?.rawTerms || '
   y += 2; drawLine(y); y += 6;
 
   const sbH = 40;
-  pdf.setFillColor(248,252,248); pdf.setDrawColor(226,232,240);
-  pdf.roundedRect(margin, y, sigBoxW, sbH, 2, 2, 'FD');
-  setFont(6, 'bold', [100,116,139]); pdf.text('PARTY A SIGNATURE', margin+3, y+5);
-  setFont(6, 'normal', [100,116,139]); pdf.text(creator.name, margin+3, y+10);
-  if (creator.signatureData) { try { pdf.addImage(creator.signatureData, 'PNG', margin+3, y+12, sigBoxW-6, 20); } catch(_){} }
-  pdf.text(`Signed: ${creator.signedAt ? new Date(creator.signedAt).toLocaleDateString('en-NG') : '—'}`, margin+3, y+36);
+const sigPartyLetters = ['A', 'B', 'C', 'D', 'E'];
+const allParties = [
+  {
+    label: 'PARTY A — CREATOR',
+    name: creator.name,
+    signatureData: creator.signatureData,
+    signedAt: creator.signedAt,
+  },
+  ...(data.signatures || []).map((sig, i) => ({
+    label: `PARTY ${sigPartyLetters[i + 1]} — RECIPIENT`,
+    name: sig.name,
+    signatureData: sig.signatureData,
+    signedAt: sig.signedAt,
+  })),
+];
 
-  pdf.setFillColor(248,252,248); pdf.roundedRect(bx, y, sigBoxW, sbH, 2, 2, 'FD');
-  setFont(6, 'bold', [100,116,139]); pdf.text('PARTY B SIGNATURE', bx+3, y+5);
-  setFont(6, 'normal', [100,116,139]); pdf.text(recipient?.name||'—', bx+3, y+10);
-  if (recipient?.signatureData) { try { pdf.addImage(recipient.signatureData, 'PNG', bx+3, y+12, sigBoxW-6, 20); } catch(_){} }
-  pdf.text(`Signed: ${recipient?.signedAt ? new Date(recipient.signedAt).toLocaleDateString('en-NG') : '—'}`, bx+3, y+36);
-  y += sbH + 10;
+const sigBoxWDynamic = allParties.length === 1 ? contentW : contentW / 2 - 4;
+
+for (let i = 0; i < allParties.length; i++) {
+  const party = allParties[i];
+  const col = i % 2;
+
+  if (col === 0 && i !== 0) {
+    y += sbH + 6;
+    checkPage(sbH + 10);
+  }
+
+  const xPos = col === 0 ? margin : margin + sigBoxWDynamic + 8;
+
+  pdf.setFillColor(248, 252, 248);
+  pdf.setDrawColor(226, 232, 240);
+  pdf.roundedRect(xPos, y, sigBoxWDynamic, sbH, 2, 2, 'FD');
+
+  setFont(6, 'bold', [100, 116, 139]);
+  pdf.text(party.label, xPos + 3, y + 5);
+
+  setFont(6, 'normal', [100, 116, 139]);
+  pdf.text(party.name || '—', xPos + 3, y + 10);
+
+  if (party.signatureData) {
+    try {
+      pdf.addImage(party.signatureData, 'PNG', xPos + 3, y + 12, sigBoxWDynamic - 6, 20);
+    } catch (_) {}
+  }
+
+  pdf.text(
+    `Signed: ${party.signedAt ? new Date(party.signedAt).toLocaleDateString('en-NG') : '—'}`,
+    xPos + 3,
+    y + 36
+  );
+}
+
+y += sbH + 10;
 
   // Audit trail
   checkPage(35);
   setFont(7, 'bold', [aR,aG,aB]); pdf.text('AUDIT TRAIL', margin, y);
   y += 2; drawLine(y); y += 5;
-  pdf.setFillColor(241,245,249); pdf.roundedRect(margin, y, contentW, 28, 2, 2, 'F');
-  setFont(6, 'normal', [71,85,105]);
-  [
-    `Creator IP: ${auditTrail?.creatorIP||'—'}`,
-    `Recipient IP: ${auditTrail?.recipientIP||'—'}`,
-    `Completed: ${auditTrail?.completedAt?.toDate ? auditTrail.completedAt.toDate().toLocaleString('en-NG') : '—'}`,
-    `Creator Device: ${(auditTrail?.creatorDevice||'—').substring(0,80)}`,
-    `Recipient Device: ${(auditTrail?.recipientDevice||'—').substring(0,80)}`,
-  ].forEach((line, i) => pdf.text(line, margin+4, y+5+i*4.5));
-  y += 35;
+  const partyIpLines = (data.signatures || []).map((sig, i) => {
+  const label = ['B','C','D','E'][i];
+  return `Party ${label} IP: ${sig.ipAddress || '—'}`;
+});
+
+const auditLines = [
+  `Creator IP: ${auditTrail?.creatorIP || '—'}`,
+  ...partyIpLines,
+  `Completed: ${auditTrail?.completedAt?.toDate ? auditTrail.completedAt.toDate().toLocaleString('en-NG') : '—'}`,
+  `Creator Device: ${(auditTrail?.creatorDevice || '—').substring(0, 80)}`,
+  ...(data.signatures || []).map((sig, i) =>
+    `Party ${['B','C','D','E'][i]} Device: ${(sig.userAgent || '—').substring(0, 80)}`
+  ),
+];
+
+pdf.setFillColor(241, 245, 249);
+const auditBoxH = Math.max(28, auditLines.length * 4.5 + 6);
+pdf.roundedRect(margin, y, contentW, auditBoxH, 2, 2, 'F');
+setFont(6, 'normal', [71, 85, 105]);
+auditLines.forEach((line, i) => pdf.text(line, margin + 4, y + 5 + i * 4.5));
+y += auditBoxH + 7;
 
   // Footer on all pages
   const totalPages = pdf.internal.getNumberOfPages();

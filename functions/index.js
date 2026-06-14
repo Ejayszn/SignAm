@@ -27,7 +27,7 @@ app.use(express.json());
 // POST { rawTerms: string } → { polishedTerms: string }
 
 app.post('/api/polish', async (req, res) => {
-  const { rawTerms } = req.body;
+  const { rawTerms, creatorName, partiesRequired } = req.body;
 
   if (!rawTerms?.trim()) {
     return res.status(400).json({ error: 'No terms provided.' });
@@ -51,16 +51,18 @@ app.post('/api/polish', async (req, res) => {
           {
             role: 'system',
             content: `You are a Nigerian legal contract specialist. Rewrite the user's raw agreement terms into a clean, professional, court-admissible contract. Rules:
-- Preserve ALL names, amounts (₦/Naira), and dates EXACTLY as written — never invent or change figures
+- Preserve ALL names, amounts (in Naira), and dates EXACTLY as written — never invent or change figures
+- The creator/Party A is: ${creatorName || 'Party A'}. Use their actual name throughout
+- There are ${partiesRequired || 2} parties total. Refer to others by whatever names appear in the text, or as Party B, Party C etc if unnamed
 - Use numbered clauses (1., 2., 3. etc.)
 - Each clause must be a complete, self-contained sentence
 - Include a clause establishing governing law as Federal Republic of Nigeria
-- Include a clause stating the agreement is binding from the date of both parties' digital signatures
+- Include a clause stating the agreement becomes binding upon digital signature by all ${partiesRequired || 2} parties
 - Plain English — no Latin phrases or complex legal jargon
-- No markdown, no asterisks, no backticks, no headers, no bold text
-- Do not address the parties as "Party A" or "Party B" — use their actual names as written
-- Start directly with "This Agreement is entered into between..." 
-- Maximum 350 words`,
+- No markdown, no asterisks, no backticks, no bold text
+- No signature lines, no "Signed by:", no date blanks — signatures are captured digitally
+- Start directly with "This Agreement is entered into between..."
+- Maximum 400 words`,
           },
           {
             role: 'user',

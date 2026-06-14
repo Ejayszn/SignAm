@@ -275,12 +275,22 @@
         </div>
 
         <!-- STEP 1: Your Details -->
-        <div id="step1" class="form-step hidden space-y-4">
-          <div class="space-y-3.5">
-            <div>
-              <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Your Full Name</label>
-              <input type="text" id="creatorName" class="field" placeholder="Full legal name" autocomplete="name" required>
-            </div>
+<div id="step1" class="form-step hidden space-y-4">
+  <div class="space-y-3.5">
+    <div>
+      <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Your Full Name</label>
+      <input type="text" id="creatorName" class="field" placeholder="Full legal name" autocomplete="name" required>
+    </div>
+    <div>
+      <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">How many parties need to sign?</label>
+      <div class="grid grid-cols-4 gap-2" id="partyCountSelector">
+        <button type="button" data-count="2" class="party-count-btn border-2 border-emerald-500 bg-emerald-50 text-emerald-700 font-bold py-2 rounded-xl text-sm transition">2</button>
+        <button type="button" data-count="3" class="party-count-btn border-2 border-slate-200 text-slate-600 font-bold py-2 rounded-xl text-sm transition hover:border-slate-300">3</button>
+        <button type="button" data-count="4" class="party-count-btn border-2 border-slate-200 text-slate-600 font-bold py-2 rounded-xl text-sm transition hover:border-slate-300">4</button>
+        <button type="button" data-count="5" class="party-count-btn border-2 border-slate-200 text-slate-600 font-bold py-2 rounded-xl text-sm transition hover:border-slate-300">5</button>
+      </div>
+      <p class="text-[10px] text-slate-400 mt-1.5">Party A is always you (the creator). Others sign via the shared link.</p>
+    </div>
             <div>
               <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">WhatsApp Number</label>
               <input type="tel" id="creatorPhone" class="field" placeholder="e.g. 08012345678" autocomplete="tel" required>
@@ -550,7 +560,7 @@
         <div class="text-4xl mx-auto">💼</div>
         <h2 class="text-xl font-bold text-slate-900 tracking-tight">Now imagine it’s a business deal.</h2>
         <p class="text-sm text-slate-600 leading-relaxed">
-          You do business for someone, you don’t get paid, then their energy shifts. They block you, delete chats, or gaslight you about the terms. Yes, it happens.
+          You do business for someone, you don’t get paid, then their energy shifts. They block you, delete chats, or manipulate you about the terms. Yes, it happens.
         </p>
         <p class="text-xs font-mono font-bold text-slate-400">
           “But I never promised to pay everything this month?”

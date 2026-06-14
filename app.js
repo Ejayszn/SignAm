@@ -4,7 +4,13 @@
 // ─────────────────────────────────────────────
 
 import { initializeApp }         from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+import { 
+  getAuth, 
+  onAuthStateChanged, 
+  signOut,
+  browserLocalPersistence,
+  setPersistence
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, setDoc,
   collection, getDocs, onSnapshot, orderBy, query, where,
@@ -25,34 +31,26 @@ const firebaseConfig = {
 };
 
 const app     = initializeApp(firebaseConfig);
-const auth    = getAuth(app);
-const db      = getFirestore(app);
+const auth = getAuth(app);
+const db   = getFirestore(app);
 const storage = getStorage(app);
 
 
 // ─── WIZARD STATE ────────────────────────────
 
 const state = {
-  // Plan
-  plan: null,           // 'standard' | 'enterprise'
-
-  // Step tracking (1–4, plan selector is step 0)
+  plan: null,
   step: 0,
   TOTAL_STEPS: 4,
-
-  // Verification
-  ninVerified: false,   // from Firestore users/{uid}.ninVerified
-  ninJustVerified: false, // verified during this session
-
-  // Payment
+  ninVerified: false,
+  ninJustVerified: false,
   paystackRef: null,
   paymentDone: false,
-
-  // Enterprise
   selectedTheme: 'classic',
   logoFile: null,
   logoUrl: null,
   selectedClauses: [],
+  partiesRequired: 2,
 };
 
 let currentUser = null;
@@ -215,6 +213,7 @@ function loadDashboard(uid) {
   );
 
   onSnapshot(q, (snap) => {
+  console.log(`Dashboard snapshot: ${snap.size} agreements`);
     // Remove skeleton loaders
     document.querySelectorAll('.skeleton-loader').forEach(el => el.remove());
 
@@ -232,7 +231,8 @@ function loadDashboard(uid) {
 
     let pending = 0, completed = 0;
     snap.forEach(docSnap => {
-      const d = docSnap.data();
+  const d = docSnap.data();
+  console.log(`Agreement ${d.docId}: status=${d.status}, signatureCount=${d.signatureCount}`);
       if (d.status === 'completed') completed++;
       else pending++;
       agreementsList.appendChild(buildAgreementCard(d));
@@ -243,10 +243,8 @@ function loadDashboard(uid) {
     statCompleted.textContent = completed;
 
   }, (err) => {
-    console.error('Dashboard listener error:', err);
-    document.querySelectorAll('.skeleton-loader').forEach(el => el.remove());
-    showToast('Could not load agreements. Please refresh.');
-  });
+  console.error('Dashboard listener error:', err.code, err.message);
+});
 }
 
 function buildAgreementCard(data) {
@@ -259,8 +257,13 @@ function buildAgreementCard(data) {
     ? 'bg-red-50 text-red-700 border-red-200'
     : 'bg-amber-50 text-amber-700 border-amber-200';
 
-  const statusLabel = data.status === 'completed' ? 'Completed'
-    : data.status === 'disputed' ? 'Disputed' : 'Pending Signature';
+  const sigCount = data.signatureCount || 0;
+const sigTotal = data.partiesRequired || 2;
+const statusLabel = data.status === 'completed'
+  ? 'Completed'
+  : data.status === 'disputed'
+  ? 'Disputed'
+  : `${sigCount + 1} of ${sigTotal} signed`;
 
   const planBadge = data.plan === 'enterprise'
     ? '<span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">Enterprise</span>'
@@ -277,7 +280,7 @@ function buildAgreementCard(data) {
           ${planBadge}
         </div>
         <p class="text-xs text-slate-500">
-          ${data.creatorName} · ${data.status === 'completed' ? 'Both parties signed' : 'Awaiting recipient'}
+          ${data.creatorName} · ${data.status === 'completed' ? 'All parties signed' : 'Awaiting recipient'}
         </p>
       </div>
       <span class="shrink-0 text-[10px] font-bold px-2.5 py-1 rounded-full border ${statusColor}">${statusLabel}</span>
@@ -296,8 +299,8 @@ function buildAgreementCard(data) {
 </div>` : `
 <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
   <div class="flex items-center gap-1.5 text-[11px] text-emerald-700 font-semibold">
-    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Both parties signed
-  </div>
+  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> All ${data.partiesRequired || 2} parties signed
+</div>
   <button class="download-pdf-btn text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5"
     data-docid="${data.docId}">
     ⬇ Download PDF
@@ -351,6 +354,13 @@ function resetWizard() {
   state.logoFile      = null;
   state.logoUrl       = null;
   state.selectedClauses = [];
+state.partiesRequired = 2;
+// Reset party count UI
+document.getElementById('partyCountSelector')?.querySelectorAll('.party-count-btn').forEach((btn, i) => {
+  btn.className = i === 0
+    ? 'party-count-btn border-2 border-emerald-500 bg-emerald-50 text-emerald-700 font-bold py-2 rounded-xl text-sm transition'
+    : 'party-count-btn border-2 border-slate-200 text-slate-600 font-bold py-2 rounded-xl text-sm transition hover:border-slate-300';
+});
 
   isDrawing = false;
   hasDrawn  = false;
@@ -608,6 +618,18 @@ themeSelector.querySelectorAll('.theme-btn').forEach(btn => {
   });
 });
 
+// ─── PARTY COUNT SELECTOR ────────────────────
+
+document.getElementById('partyCountSelector').querySelectorAll('.party-count-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.getElementById('partyCountSelector').querySelectorAll('.party-count-btn').forEach(b => {
+      b.className = 'party-count-btn border-2 border-slate-200 text-slate-600 font-bold py-2 rounded-xl text-sm transition hover:border-slate-300';
+    });
+    btn.className = 'party-count-btn border-2 border-emerald-500 bg-emerald-50 text-emerald-700 font-bold py-2 rounded-xl text-sm transition';
+    state.partiesRequired = parseInt(btn.dataset.count);
+  });
+});
+
 
 // ─── AI POLISH ────────────────────────
 
@@ -624,7 +646,11 @@ aiPolishBtn.addEventListener('click', async () => {
     const res = await fetch('https://polishterms-gqjepwevuq-uc.a.run.app/api/polish', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ rawTerms: rawTermsInput.value.trim() })
+  body: JSON.stringify({
+    rawTerms: rawTermsInput.value.trim(),
+    creatorName: creatorName.value.trim(),
+    partiesRequired: state.partiesRequired,
+  })
 });
 const data = await res.json();
 if (data.polishedTerms) rawTermsInput.value = data.polishedTerms;
@@ -900,26 +926,27 @@ async function submitAgreement() {
       documentTitle:  document.getElementById('documentTitle').value.trim() || null,
     } : null,
 
-    recipient: null,
+    partiesRequired: state.partiesRequired,
+signatures:      [],
 
-    auditTrail: {
-      creatorIP:       ipAddress,
-      creatorDevice:   navigator.userAgent,
-      recipientIP:     null,
-      recipientDevice: null,
-      completedAt:     null,
-    },
+auditTrail: {
+  creatorIP:    ipAddress,
+  creatorDevice: navigator.userAgent,
+  completedAt:  null,
+},
   };
 
   try {
     await setDoc(doc(db, 'agreements', docId), agreementData);
     await setDoc(doc(db, 'users', currentUser.uid, 'agreements', docId), {
-      docId,
-      plan:        state.plan,
-      createdAt:   serverTimestamp(),
-      status:      'pending_recipient',
-      creatorName: creatorName.value.trim(),
-    });
+  docId,
+  plan:            state.plan,
+  createdAt:       serverTimestamp(),
+  status:          'pending_signatures',
+  creatorName:     creatorName.value.trim(),
+  partiesRequired: state.partiesRequired,
+  signatureCount:  0,
+});
 
     closeModal(wizardModal);
     showSuccessScreen(docId);
@@ -1191,48 +1218,63 @@ function cleanText(text) {
   drawLine(y);
   y += 6;
 
-  const sigBoxW = contentW / 2 - 4;
   const sigBoxH = 40;
+const partyLetters = ['A', 'B', 'C', 'D', 'E'];
+const allParties = [
+  {
+    label: 'PARTY A — CREATOR',
+    name: creator.name,
+    signatureData: creator.signatureData,
+    signedAt: creator.signedAt,
+  },
+  ...(data.signatures || []).map((sig, i) => ({
+    label: `PARTY ${partyLetters[i + 1]} — RECIPIENT`,
+    name: sig.name,
+    signatureData: sig.signatureData,
+    signedAt: sig.signedAt,
+  })),
+];
 
-  // Creator signature box
+const cols = Math.min(allParties.length, 2);
+const sigBoxW = cols === 1 ? contentW : contentW / 2 - 4;
+
+for (let i = 0; i < allParties.length; i++) {
+  const party = allParties[i];
+  const col = i % 2;
+  const isNewRow = col === 0;
+
+  if (isNewRow && i !== 0) {
+    y += sigBoxH + 6;
+    checkPage(sigBoxH + 10);
+  }
+
+  const xPos = col === 0 ? margin : margin + sigBoxW + 8;
+
   pdf.setDrawColor(226, 232, 240);
   pdf.setFillColor(248, 252, 248);
-  pdf.roundedRect(margin, y, sigBoxW, sigBoxH, 2, 2, 'FD');
+  pdf.roundedRect(xPos, y, sigBoxW, sigBoxH, 2, 2, 'FD');
 
-  setFont(6, 'bold', [100,116,139]);
-  addText('PARTY A SIGNATURE', margin + 3, y + 5);
-  setFont(6, 'normal', [100,116,139]);
-  addText(creator.name, margin + 3, y + 10);
+  setFont(6, 'bold', [100, 116, 139]);
+  addText(party.label, xPos + 3, y + 5);
 
-  if (creator.signatureData) {
+  setFont(6, 'normal', [100, 116, 139]);
+  addText(party.name || '—', xPos + 3, y + 10);
+
+  if (party.signatureData) {
     try {
-      pdf.addImage(creator.signatureData, 'PNG', margin + 3, y + 12, sigBoxW - 6, 20);
+      pdf.addImage(party.signatureData, 'PNG', xPos + 3, y + 12, sigBoxW - 6, 20);
     } catch (_) {}
   }
 
-  setFont(6, 'normal', [100,116,139]);
-  addText(`Signed: ${creator.signedAt ? new Date(creator.signedAt).toLocaleDateString('en-NG') : '—'}`, margin + 3, y + 36);
+  setFont(6, 'normal', [100, 116, 139]);
+  addText(
+    `Signed: ${party.signedAt ? new Date(party.signedAt).toLocaleDateString('en-NG') : '—'}`,
+    xPos + 3,
+    y + 36
+  );
+}
 
-  // Recipient signature box
-  const rx = margin + sigBoxW + 8;
-  pdf.setFillColor(248, 252, 248);
-  pdf.roundedRect(rx, y, sigBoxW, sigBoxH, 2, 2, 'FD');
-
-  setFont(6, 'bold', [100,116,139]);
-  addText('PARTY B SIGNATURE', rx + 3, y + 5);
-  setFont(6, 'normal', [100,116,139]);
-  addText(recipient?.name || '—', rx + 3, y + 10);
-
-  if (recipient?.signatureData) {
-    try {
-      pdf.addImage(recipient.signatureData, 'PNG', rx + 3, y + 12, sigBoxW - 6, 20);
-    } catch (_) {}
-  }
-
-  setFont(6, 'normal', [100,116,139]);
-  addText(`Signed: ${recipient?.signedAt ? new Date(recipient.signedAt).toLocaleDateString('en-NG') : '—'}`, rx + 3, y + 36);
-
-  y += sigBoxH + 10;
+y += sigBoxH + 10;
 
   // ── AUDIT TRAIL ──
   checkPage(35);
@@ -1242,23 +1284,31 @@ function cleanText(text) {
   drawLine(y);
   y += 5;
 
-  pdf.setFillColor(241, 245, 249);
-  pdf.roundedRect(margin, y, contentW, 28, 2, 2, 'F');
+const partyIpLines = (data.signatures || []).map((sig, i) => {
+    const label = ['B','C','D','E'][i];
+    return `Party ${label} IP: ${sig.ipAddress || '—'}`;
+  });
 
-  setFont(6, 'normal', [71,85,105]);
   const auditLines = [
     `Creator IP: ${auditTrail?.creatorIP || '—'}`,
-    `Recipient IP: ${auditTrail?.recipientIP || '—'}`,
+    ...partyIpLines,
     `Completed At: ${auditTrail?.completedAt?.toDate ? auditTrail.completedAt.toDate().toLocaleString('en-NG') : '—'}`,
     `Creator Device: ${(auditTrail?.creatorDevice || '—').substring(0, 80)}`,
-    `Recipient Device: ${(auditTrail?.recipientDevice || '—').substring(0, 80)}`,
+    ...(data.signatures || []).map((sig, i) =>
+      `Party ${['B','C','D','E'][i]} Device: ${(sig.userAgent || '—').substring(0, 80)}`
+    ),
   ];
 
+  pdf.setFillColor(241, 245, 249);
+  const auditBoxH = Math.max(28, auditLines.length * 4.5 + 6);
+  pdf.roundedRect(margin, y, contentW, auditBoxH, 2, 2, 'F');
+
+  setFont(6, 'normal', [71, 85, 105]);
   auditLines.forEach((line, i) => {
     addText(line, margin + 4, y + 5 + i * 4.5);
   });
 
-  y += 35;
+  y += auditBoxH + 7;
 
   // ── FOOTER ──
   const totalPages = pdf.internal.getNumberOfPages();
