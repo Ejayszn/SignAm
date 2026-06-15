@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>SignAm | Dashboard</title>
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -135,7 +141,7 @@
   <!-- ── HEADER ── -->
   <header class="bg-[#f9fafb]/95 backdrop-blur-md border-b border-slate-200/70 sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
     <div class="flex items-center gap-2.5">
-      <div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-extrabold text-lg shadow-sm shadow-emerald-600/20">S</div>
+      <img src="apple-touch-icon.png" alt="SignAm Logo" class="w-10 h-10 object-contain">
       <span class="font-bold text-xl tracking-tight text-slate-900">Sign<span class="text-emerald-600">Am</span></span>
     </div>
     <div class="flex items-center gap-4">
@@ -241,7 +247,7 @@
 <button type="button" id="selectStandardBtn" class="w-full text-left p-5 rounded-2xl border-2 border-slate-200 hover:border-slate-300 bg-white transition-all space-y-3 group focus:outline-none focus:border-emerald-500">
   <div class="flex items-center justify-between">
     <span class="text-sm font-bold text-slate-900">Individual Plan</span>
-    <span class="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full">Personal</span>
+    <span class="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full">₦1,500</span>
   </div>
   <p class="text-xs text-slate-500 leading-relaxed">Perfect for personal contracts, peer loans, quick freelance engagements, and simple handshakes.</p>
 
@@ -253,15 +259,14 @@
           </button>
 
           <!-- Business Plan -->
-<button type="button" id="selectEnterpriseBtn" class="w-full text-left p-5 rounded-2xl border-2 border-emerald-600 bg-emerald-50/30 hover:bg-emerald-50/50 transition-all space-y-3 focus:outline-none">
-  <div class="flex items-center justify-between">
-    <span class="text-sm font-bold text-emerald-950 flex items-center gap-2">
-      Business Plan
-      <span class="bg-emerald-600 text-[9px] text-white font-extrabold px-2 py-0.5 rounded uppercase tracking-wider">Growth</span>
-    </span>
-    <span class="text-xs font-bold text-white bg-emerald-600 px-3 py-1 rounded-full shadow-sm">₦8,000</span>
-  </div>
-  <p class="text-xs text-emerald-800 leading-relaxed">Tailored for corporate setups, features customized business imagery, legal clauses, and premium document generation.</p>
+        <button type="button" id="selectEnterpriseBtn" class="w-full text-left p-5 rounded-2xl border-2 border-emerald-600 bg-emerald-50/30 hover:bg-emerald-50/50 transition-all space-y-3 focus:outline-none">
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-bold text-emerald-950 flex items-center gap-2">
+              Business Plan
+            </span>
+            <span class="text-xs font-bold text-white bg-emerald-600 px-3 py-1 rounded-full shadow-sm">₦6,000</span>
+          </div>
+          <p class="text-xs text-emerald-800 leading-relaxed">Tailored for corporate setups, features customized business imagery, legal clauses, and premium document generation.</p>
 
             <div class="grid grid-cols-2 gap-y-1.5 text-[11px] text-emerald-700 font-semibold pt-1 border-t border-emerald-200/40">
               <span class="flex items-center gap-1.5"><span>✓</span> Standard Suite Included</span>
@@ -434,7 +439,7 @@
             <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm shrink-0">✓</div>
             <div>
               <p class="text-sm font-bold text-emerald-950">Identity Pipeline Verified</p>
-              <p class="text-xs text-emerald-700 mt-0.5 leading-relaxed">Your account profile authentication details verify securely. You can advance straight towards checkout clearance.</p>
+              <p class="text-xs text-emerald-700 mt-0.5 leading-relaxed">Your account is verified. Proceed to checkout.</p>
             </div>
           </div>
 
@@ -474,13 +479,11 @@
           <div id="paymentSummary" class="hidden space-y-4">
             <div class="bg-slate-50 border border-slate-200/60 rounded-xl p-4 space-y-2.5">
               <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Transaction Profile Invoice</p>
+              <p class="text-[13px] leading-relaxed text-emerald-800">
+              Includes secure agreement hosting, NIN verification, a tamper-proof audit trail, and PDF generation.
               <div class="flex justify-between items-center">
                 <span class="text-xs text-slate-600" id="paymentPlanLabel">Standard Deployment</span>
-                <span class="text-base font-extrabold text-slate-900" id="paymentAmount">₦500</span>
-              </div>
-              <div class="flex justify-between items-center text-[11px] border-t border-slate-200/40 pt-2 text-slate-500">
-                <span>Identity Verification Node</span>
-                <span class="text-emerald-600 font-bold">Completely Covered</span>
+                <span class="text-base font-extrabold text-slate-900" id="paymentAmount">₦1,500</span>
               </div>
             </div>
             <button id="paystackPayBtn"
@@ -569,9 +572,9 @@
 
       <div class="story-slide flex flex-col text-center space-y-4 hidden" id="story-slide-2">
         <div class="text-4xl mx-auto">💼</div>
-        <h2 class="text-xl font-bold text-slate-900 tracking-tight">Now imagine it’s a business deal.</h2>
+        <h2 class="text-xl font-bold text-slate-900 tracking-tight">Imagine it’s a business deal.</h2>
         <p class="text-sm text-slate-600 leading-relaxed">
-          You do business for someone, you don’t get paid, then their energy shifts. They block you, delete chats, or manipulate you about the terms. Yes, it happens.
+          You do business for someone, only for the client to ghost or manipulate you, and end up not paying.
         </p>
         <p class="text-xs font-mono font-bold text-slate-400">
           “But I never promised to pay everything this month?”
@@ -582,16 +585,39 @@
         <div class="text-4xl mx-auto">?</div>
         <h2 class="text-xl font-bold text-slate-900 tracking-tight">Why do these things happen?</h2>
         <p class="text-sm text-slate-600 leading-relaxed">
-          Because there's zero legal backing. Even when you write it down on paper or text, they can claim someone else used their phone, or delete the evidence. Without proof, your money is gone.
+          Because without binding contracts or proof, people can easily delete evidence or deny involvement.
         </p>
       </div>
 
       <div class="story-slide flex flex-col text-center space-y-4 hidden" id="story-slide-4">
-  <h2 class="text-xl font-bold text-slate-900 tracking-tight">Before you send the money, sign am first.</h2>
+  <h2 class="text-xl font-bold text-slate-900 tracking-tight">Before anything, sign am first.</h2>
+  
   <p class="text-sm text-slate-600 leading-relaxed">
-    In one minute, both of you sign. That's a real contract with their verified phone number, IP address, device info, and signature permanently locked in. They can't deny it, they can't ghost.
+    In one minute, both of you sign. That's a real contract; with their verified phone number, IP address, device info, and signature permanently locked in. 
   </p>
-  <p class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl inline-block mx-auto">
+
+  <!-- Price Comparison Card -->
+  <div class="bg-slate-50 border border-slate-100 rounded-2xl p-3 text-left space-y-2">
+    <div class="flex justify-between items-center text-xs">
+      <span class="text-slate-500 font-medium">Traditional Lawyer (Consultation):</span>
+      <span class="text-slate-700 font-bold line-through">₦50,000+</span>
+    </div>
+    <div class="h-[1px] bg-slate-200/60 w-full"></div>
+    <div class="flex justify-between items-center text-xs">
+      <span class="text-emerald-700 font-bold flex items-center gap-1">
+        Signam Standard:
+      </span>
+      <span class="text-emerald-700 font-extrabold text-sm">₦1,500</span>
+    </div>
+    <div class="flex justify-between items-center text-xs">
+      <span class="text-indigo-700 font-bold flex items-center gap-1">
+        Signam Enterprise:
+      </span>
+      <span class="text-indigo-700 font-extrabold text-sm">₦6,000</span>
+    </div>
+  </div>
+
+  <p class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-2 rounded-xl inline-block mx-auto leading-normal">
     If they're serious about the deal, they'll sign. If they won't sign, you already have your answer.
   </p>
 </div>

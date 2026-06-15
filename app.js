@@ -760,7 +760,7 @@ if (data.polishedTerms) rawTermsInput.value = data.polishedTerms;
 // ─── STEP 3: NIN + PAYMENT ───────────────────
 
 function renderStep3() {
-  const amountText = state.plan === 'enterprise' ? '₦8,000' : '₦500';
+  const amountText = state.plan === 'enterprise' ? '₦6,000' : '₦1,500';
   paymentAmount.textContent    = amountText;
   paymentPlanLabel.textContent = state.plan === 'enterprise' ? 'Enterprise Agreement' : 'Standard Agreement';
   paystackPayBtn.textContent   = `Pay ${amountText} & Continue →`;
@@ -846,7 +846,7 @@ function initiatePaystackPayment() {
   paystackPayBtn.disabled    = true;
   paystackPayBtn.textContent = 'Opening payment...';
 
-  const amount = state.plan === 'enterprise' ? 800000 : 50000; // kobo
+  const amount = state.plan === 'enterprise' ? 600000 : 150000; // kobo
   const email    = creatorEmail.value.trim();
   const ref      = `SIGNAM-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
@@ -867,7 +867,7 @@ function initiatePaystackPayment() {
     },
     onClose: () => {
       paystackPayBtn.disabled    = false;
-      paystackPayBtn.textContent = `Pay ${state.plan === 'enterprise' ? '₦8,000' : '₦500'} & Continue →`;
+      paystackPayBtn.textContent = `Pay ${state.plan === 'enterprise' ? '₦6,000' : '₦1,500'} & Continue →`;
       showToast('Payment cancelled.');
     },
   });
