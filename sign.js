@@ -203,11 +203,18 @@ function renderAgreement() {
 
   // Agreement type label
   const typeLabels = {
-    peer_loan:       'Money Loan / Borrowing',
-    freelance:       'Freelance / Service Delivery',
-    item_rental:     'Item Rental / Asset Hire',
-    business_supply: 'Business Supply / Trade',
-    nda:             'Non-Disclosure Agreement',
+    personal_loan:   'Personal Loan / Money Lending',
+    item_borrow:     'Rent / Item Borrowing',
+    service_job:     'Service / Job Agreement',
+    roommate:        'Roommate / House Agreement',
+    event_vendor:    'Event Vendor Agreement',
+    business_supply: 'Business Supply & Trade Contract',
+    sla:             'Service Level Agreement (SLA)',
+    nda:             'Non-Disclosure Agreement (NDA)',
+    partnership:     'Partnership / Equity Agreement',
+    retainer:        'Client Retainer Agreement',
+    employment:      'Employment / Contractor Agreement',
+    mou:             'Memorandum of Understanding (MOU)',
     custom:          'Custom Legal Contract',
   };
 
@@ -782,13 +789,40 @@ async function generatePDFFromData(docId, data) {
   pdf.text(creator.phone||'—', margin+4, y+19);
   pdf.text(creator.email||'—', margin+4, y+24);
 
-  const bx = margin + sigBoxW + 8;
-  pdf.setFillColor(248,250,252); pdf.roundedRect(bx, y, sigBoxW, 28, 2, 2, 'FD');
-  setFont(7, 'bold', [aR,aG,aB]); pdf.text('PARTY B — RECIPIENT', bx+4, y+6);
-  setFont(8, 'bold', [15,23,42]); pdf.text(recipient?.name||'—', bx+4, y+13);
-  setFont(7, 'normal', [100,116,139]);
-  pdf.text(recipient?.phone||'—', bx+4, y+19);
-  pdf.text(`Signed: ${recipient?.signedAt ? new Date(recipient.signedAt).toLocaleDateString('en-NG') : '—'}`, bx+4, y+24);
+  const allRecipients = data.signatures || [];
+  const recipientLetters = ['B', 'C', 'D', 'E'];
+  const partyBoxW = contentW / 2 - 4;
+
+  for (let i = 0; i < Math.max(allRecipients.length, 1); i++) {
+    const sig = allRecipients[i];
+    const letter = recipientLetters[i] || String.fromCharCode(66 + i);
+    // Party B shares row with Party A (right col), Party C starts new row (left col), etc.
+    const col = (i + 1) % 2;
+    const isNewRow = col === 0;
+
+    if (isNewRow) {
+      y += 36;
+      checkPage(36);
+    }
+
+    const bx = col === 0 ? margin : margin + partyBoxW + 8;
+
+    pdf.setFillColor(248, 250, 252);
+    pdf.setDrawColor(226, 232, 240);
+    pdf.setLineWidth(0.3);
+    pdf.roundedRect(bx, y, partyBoxW, 28, 2, 2, 'FD');
+
+    setFont(7, 'bold', [aR, aG, aB]);
+    pdf.text(`PARTY ${letter} — RECIPIENT`, bx + 4, y + 6);
+
+    setFont(8, 'bold', [15, 23, 42]);
+    pdf.text(sig?.name || '—', bx + 4, y + 13);
+
+    setFont(7, 'normal', [100, 116, 139]);
+    pdf.text(sig?.phone || '—', bx + 4, y + 19);
+    pdf.text(`Signed: ${sig?.signedAt ? new Date(sig.signedAt).toLocaleDateString('en-NG') : '—'}`, bx + 4, y + 24);
+  }
+
   y += 36;
 
   // Terms

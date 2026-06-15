@@ -108,6 +108,96 @@ const aiPolishBtn   = document.getElementById('aiPolishBtn');
 const enterpriseStep2Fields = document.getElementById('enterpriseStep2Fields');
 const expiryDate    = document.getElementById('expiryDate');
 
+// ─── CUSTOM AGREEMENT TYPE DROPDOWN ──────────
+
+const individualOptions = [
+  { value: 'personal_loan',  label: 'Personal Loan / Money Lending' },
+  { value: 'item_borrow',    label: 'Rent / Item Borrowing' },
+  { value: 'service_job',    label: 'Service / Job Agreement (e.g. tailor, carpenter)' },
+  { value: 'roommate',       label: 'Roommate / House Agreement' },
+  { value: 'event_vendor',   label: 'Event Vendor Agreement' },
+  { value: 'custom',         label: 'Custom Legal Contract' },
+];
+
+const businessOptions = [
+  { value: 'business_supply', label: 'Business Supply & Trade Contract' },
+  { value: 'sla',             label: 'Service Level Agreement (SLA)' },
+  { value: 'nda',             label: 'Non-Disclosure Agreement (NDA)' },
+  { value: 'partnership',     label: 'Partnership / Equity Agreement' },
+  { value: 'retainer',        label: 'Client Retainer Agreement' },
+  { value: 'employment',      label: 'Employment / Contractor Agreement' },
+  { value: 'mou',             label: 'Memorandum of Understanding (MOU)' },
+  { value: 'custom',          label: 'Custom Legal Contract' },
+];
+
+function buildAgreementTypeDropdown(options) {
+  const container = document.getElementById('agreementTypeOptions');
+  const hiddenInput = document.getElementById('agreementType');
+  const labelEl = document.getElementById('agreementTypeLabel');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.dataset.value = opt.value;
+    btn.textContent = opt.label;
+    btn.className = 'w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors';
+
+    // Highlight currently selected
+    if (hiddenInput.value === opt.value) {
+      btn.classList.add('bg-emerald-50', 'text-emerald-700', 'font-bold');
+    }
+
+    btn.addEventListener('click', () => {
+      hiddenInput.value = opt.value;
+      labelEl.textContent = opt.label;
+      closeAgreementTypeDropdown();
+      // Update highlight
+      container.querySelectorAll('button').forEach(b => {
+        b.classList.remove('bg-emerald-50', 'text-emerald-700', 'font-bold');
+      });
+      btn.classList.add('bg-emerald-50', 'text-emerald-700', 'font-bold');
+    });
+
+    container.appendChild(btn);
+  });
+
+  // Set label to first option if current value not in new list
+  const values = options.map(o => o.value);
+  if (!values.includes(hiddenInput.value)) {
+    hiddenInput.value = options[0].value;
+    labelEl.textContent = options[0].label;
+  }
+}
+
+function openAgreementTypeDropdown() {
+  document.getElementById('agreementTypeList').classList.remove('hidden');
+  document.getElementById('agreementTypeChevron').style.transform = 'rotate(180deg)';
+}
+
+function closeAgreementTypeDropdown() {
+  document.getElementById('agreementTypeList').classList.add('hidden');
+  document.getElementById('agreementTypeChevron').style.transform = 'rotate(0deg)';
+}
+
+document.getElementById('agreementTypeBtn')?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const list = document.getElementById('agreementTypeList');
+  list.classList.contains('hidden') ? openAgreementTypeDropdown() : closeAgreementTypeDropdown();
+});
+
+// Close when clicking outside
+document.addEventListener('click', (e) => {
+  if (!document.getElementById('agreementTypeDropdown')?.contains(e.target)) {
+    closeAgreementTypeDropdown();
+  }
+});
+
+// Init with individual options
+buildAgreementTypeDropdown(individualOptions);
+
 // Step 3
 const alreadyVerifiedState = document.getElementById('alreadyVerifiedState');
 const ninFirstTimeState    = document.getElementById('ninFirstTimeState');
@@ -432,6 +522,7 @@ document.getElementById('selectStandardBtn').addEventListener('click', () => {
   state.plan = 'standard';
   enterpriseStep1Fields.classList.add('hidden');
   enterpriseStep2Fields.classList.add('hidden');
+  buildAgreementTypeDropdown(individualOptions);
   state.step = 1;
   showWizardStep(1);
 });
@@ -440,6 +531,7 @@ document.getElementById('selectEnterpriseBtn').addEventListener('click', () => {
   state.plan = 'enterprise';
   enterpriseStep1Fields.classList.remove('hidden');
   enterpriseStep2Fields.classList.remove('hidden');
+  buildAgreementTypeDropdown(businessOptions);
   state.step = 1;
   showWizardStep(1);
 });
@@ -1120,24 +1212,59 @@ function cleanText(text) {
   setFont(7, 'bold', [accentR, accentG, accentB]);
   addText('PARTY B — RECIPIENT', bx + 4, y + 6);
 
-  setFont(8, 'bold', [15,23,42]);
-  addText(recipient?.name || '—', bx + 4, y + 13);
+  // All recipient party boxes (B, C, D, E...)
+  const allRecipients = data.signatures || [];
+  const recipientLetters = ['B', 'C', 'D', 'E'];
+  const partyBoxW = contentW / 2 - 3;
 
-  setFont(7, 'normal', [100,116,139]);
-  addText(recipient?.phone || '—', bx + 4, y + 19);
-  addText(`Signed: ${recipient?.signedAt ? new Date(recipient.signedAt).toLocaleDateString('en-NG') : '—'}`, bx + 4, y + 24);
+  for (let i = 0; i < Math.max(allRecipients.length, 1); i++) {
+    const sig = allRecipients[i];
+    const letter = recipientLetters[i] || String.fromCharCode(66 + i);
+    // Party B shares row with Party A (right col), Party C starts new row (left col), etc.
+    const col = (i + 1) % 2;
+    const isNewRow = col === 0;
+
+    if (isNewRow) {
+      y += 36;
+      checkPage(36);
+    }
+
+    const bx = col === 0 ? margin : margin + partyBoxW + 6;
+
+    pdf.setFillColor(248, 250, 252);
+    pdf.setDrawColor(226, 232, 240);
+    pdf.setLineWidth(0.3);
+    pdf.roundedRect(bx, y, partyBoxW, 28, 2, 2, 'FD');
+
+    setFont(7, 'bold', [accentR, accentG, accentB]);
+    addText(`PARTY ${letter} — RECIPIENT`, bx + 4, y + 6);
+
+    setFont(8, 'bold', [15, 23, 42]);
+    addText(sig?.name || '—', bx + 4, y + 13);
+
+    setFont(7, 'normal', [100, 116, 139]);
+    addText(sig?.phone || '—', bx + 4, y + 19);
+    addText(`Signed: ${sig?.signedAt ? new Date(sig.signedAt).toLocaleDateString('en-NG') : '—'}`, bx + 4, y + 24);
+  }
 
   y += 36;
 
   // ── AGREEMENT TYPE ──
   if (agreement?.type) {
     const typeLabels = {
-      peer_loan: 'Money Loan / Borrowing',
-      freelance: 'Freelance / Service Delivery',
-      item_rental: 'Item Rental / Asset Hire',
-      business_supply: 'Business Supply / Trade',
-      nda: 'Non-Disclosure Agreement',
-      custom: 'Custom Legal Contract',
+      personal_loan:   'Personal Loan / Money Lending',
+      item_borrow:     'Rent / Item Borrowing',
+      service_job:     'Service / Job Agreement',
+      roommate:        'Roommate / House Agreement',
+      event_vendor:    'Event Vendor Agreement',
+      business_supply: 'Business Supply & Trade Contract',
+      sla:             'Service Level Agreement (SLA)',
+      nda:             'Non-Disclosure Agreement (NDA)',
+      partnership:     'Partnership / Equity Agreement',
+      retainer:        'Client Retainer Agreement',
+      employment:      'Employment / Contractor Agreement',
+      mou:             'Memorandum of Understanding (MOU)',
+      custom:          'Custom Legal Contract',
     };
     setFont(7, 'normal', [100,116,139]);
     addText(`Agreement Type: ${typeLabels[agreement.type] || agreement.type}`, margin, y);
