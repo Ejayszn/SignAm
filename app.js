@@ -732,7 +732,13 @@ aiPolishBtn.addEventListener('click', async () => {
   }
 
   aiPolishBtn.disabled = true;
-  aiPolishBtn.textContent = 'Polishing...';
+  aiPolishBtn.innerHTML = `
+  <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+  </svg>
+  Polishing...
+`;
 
   try {
     const res = await fetch('https://polishterms-gqjepwevuq-uc.a.run.app/api/polish', {
@@ -752,7 +758,10 @@ if (data.polishedTerms) rawTermsInput.value = data.polishedTerms;
     showToast('AI failed. Try again.');
   } finally {
     aiPolishBtn.disabled = false;
-    aiPolishBtn.textContent = 'AI Polish';
+    aiPolishBtn.innerHTML = `
+  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 21l8.904-4.473L21 9l-3.473-3.473M9.813 15.904L13.25 12.46M9.813 15.904l3.437-3.443M13.25 12.46l3.443-3.438M13.25 12.46l-3.438-3.443M9.813 15.904L6.375 12.461m0 0L3 9l8.904-4.473L15.375 8M6.375 12.461l3.438-3.438" /></svg>
+  Optimize with ai
+`;
   }
 });
 

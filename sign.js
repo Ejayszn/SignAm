@@ -55,6 +55,7 @@ const verifyPhoneInput   = document.getElementById('verifyPhone');
 const verifyPhoneBtn     = document.getElementById('verifyPhoneBtn');
 const verifyError        = document.getElementById('verifyError');
 const recipientNameInput = document.getElementById('recipientName');
+const recipientEmailInput = document.getElementById('recipientEmail');
 
 // OTP phase
 const otpPhase     = document.getElementById('otpPhase');
@@ -253,7 +254,7 @@ const progressBanner = document.createElement('div');
 progressBanner.className = 'bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center justify-between';
 progressBanner.innerHTML = `
   <span class="text-xs font-semibold text-amber-800">${signedCount + 1} of ${partiesRequired} signatures collected</span>
-  <span class="text-[10px] font-bold text-amber-600">${partiesRequired - signedCount - 1} more needed after you</span>
+  <span class="text-[10px] font-bold text-amber-600">${partiesRequired - signedCount - 1} more needed</span>
 `;
 if (partiesRequired > 2) {
   partiesList.appendChild(progressBanner);
@@ -357,11 +358,19 @@ async function sendOTP() {
   const phone = verifyPhoneInput.value.trim();
 
   clearError(verifyError, verifyPhoneInput);
-
+ 
   if (!name) {
     showError(verifyError, recipientNameInput, 'Please enter your full name.');
     return;
   }
+ 
+  const email = recipientEmailInput?.value.trim();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showError(verifyError, recipientEmailInput, 'Please enter a valid email address.');
+    recipientEmailInput?.classList.add('error');
+    return;
+  }
+ 
   if (!phone) {
     showError(verifyError, verifyPhoneInput, 'Please enter your phone number.');
     return;
@@ -582,7 +591,8 @@ async function handleSubmit() {
   } catch (_) {}
 
   const recipientName  = recipientNameInput?.value.trim() || 'Unknown';
-const recipientPhone = formatPhoneNumber(verifyPhoneInput.value.trim());
+  const recipientPhone = formatPhoneNumber(verifyPhoneInput.value.trim());
+  const recipientEmail = recipientEmailInput?.value.trim() || '';
 
   try {
     const docRef = doc(db, 'agreements', activeDocId);
@@ -593,6 +603,7 @@ const existingSignatures = agreementData.signatures || [];
 const newSignature = {
   name:          recipientName,
   phone:         recipientPhone,
+  email:         recipientEmail,
   signatureData: canvas.toDataURL(),
   signedAt:      new Date().toISOString(),
   ipAddress,
@@ -633,6 +644,47 @@ if (creatorUid) {
     // Don't fail the whole signing process
   }
 }
+
+// Send confirmation email to recipient (best-effort, don't block on failure)
+    try {
+      await fetch('https://polishterms-gqjepwevuq-uc.a.run.app/api/send-recipient-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipientName,
+          recipientEmail,
+          docId: activeDocId,
+          creatorName: agreementData.creator?.name || 'the agreement creator',
+          signedAt: new Date().toISOString(),
+          isComplete,
+          partiesRequired: agreementData.partiesRequired || 2,
+          signaturesCollected: updatedSignatures.length,
+        }),
+      });
+    } catch (emailErr) {
+      // Non-blocking — signing already succeeded
+      console.warn('Confirmation email failed (non-blocking):', emailErr.message);
+    }
+
+    // Send notification email to creator (best-effort, non-blocking)
+    try {
+      await fetch('https://polishterms-gqjepwevuq-uc.a.run.app/api/send-creator-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          creatorName:         agreementData.creator?.name || 'there',
+          creatorEmail:        agreementData.creator?.email || '',
+          docId:               activeDocId,
+          signerName:          recipientName,
+          signedAt:            new Date().toISOString(),
+          isComplete,
+          partiesRequired:     agreementData.partiesRequired || 2,
+          signaturesCollected: updatedSignatures.length,
+        }),
+      });
+    } catch (creatorEmailErr) {
+      console.warn('Creator notification email failed (non-blocking):', creatorEmailErr.message);
+    }
 
     // Show success screen
 document.getElementById('actionZone').classList.add('hidden');
@@ -704,6 +756,11 @@ function clearError(errorEl, inputEl) {
 }
 
 verifyPhoneInput?.addEventListener('input', () => clearError(verifyError, verifyPhoneInput));
+
+recipientEmailInput?.addEventListener('input', () => {
+  recipientEmailInput.classList.remove('error');
+  clearError(verifyError);
+});
 
 // ─── PDF GENERATION (recipient side) ─────────
 

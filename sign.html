@@ -133,17 +133,26 @@
     <!-- Action zone -->
 <section id="actionZone" class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm">
 
-  <!-- Phase 1: Name + Phone entry -->
+  <!-- Details entry -->
   <div id="verificationPhase" class="space-y-4">
     <div>
       <h3 class="text-sm font-bold text-slate-900">Enter your details to unlock signing</h3>
       <p class="text-xs text-slate-500 mt-0.5">Your phone number will be verified via OTP before you can sign.</p>
     </div>
     <div class="space-y-3">
+
+      <!-- Name and email address -->
+ 
       <div>
         <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Your Full Name</label>
         <input type="text" id="recipientName" placeholder="Enter your full legal name"
           class="field" autocomplete="name">
+      </div>
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Your Email Address</label>
+        <input type="email" id="recipientEmail" placeholder="e.g., name@example.com"
+          class="field" autocomplete="email">
+        <p class="text-[10px] text-slate-400 mt-1">A confirmation will be sent here after you sign.</p>
       </div>
       <div>
         <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Your WhatsApp Number</label>
