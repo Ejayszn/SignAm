@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="seo-title">SignAm Guide</title>
+  <meta id="seo-desc" name="description" content="">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .serif-font { font-family: 'Playfair Display', serif; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased">
+
+  <!-- Header (Matches Index UI perfectly) -->
+  <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <!-- Left: Brand Logo -->
+      <a href="index.html" class="flex items-center gap-2">
+        <img src="apple-touch-icon.png" alt="SignAm Logo" class="w-9 h-9 object-contain">
+        <span class="font-bold text-xl tracking-tight text-slate-900">Sign<span class="text-emerald-600">Am</span></span>
+      </a>
+
+      <!-- Center: Main Navigation Links -->
+      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
+        <a href="index.html" class="hover:text-slate-900 transition-colors">Home</a>
+        <a href="index.html#how-it-works" class="hover:text-slate-900 transition-colors">How It Works</a>
+        <a href="index.html#pricing" class="hover:text-slate-900 transition-colors">Pricing</a>
+        <a href="blog.html" class="text-emerald-600 font-semibold">Guides</a>
+      </nav>
+
+      <!-- Right: Authentication Action Group -->
+      <div class="flex items-center gap-4">
+        <a href="login.html" class="hidden sm:inline-block text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
+          Sign In
+        </a>
+        <a href="login.html" class="inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-xl transition-all shadow-sm shadow-emerald-600/5">
+          Get Started
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content Layout -->
+  <main class="max-w-5xl mx-auto px-4 py-10 grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <!-- Article Body -->
+    <article class="lg:col-span-8 bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 space-y-6 shadow-sm">
+      
+      <div class="mb-2">
+        <a href="blog.html" class="group inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-600 transition-colors">
+          <span class="inline-block transition-transform group-hover:-translate-x-0.5">←</span> 
+          Back to Guides
+        </a>
+      </div>
+
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-5">
+        <span id="article-tag" class="text-[10px] font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md inline-block w-fit">GUIDE</span>
+        
+        <div class="text-xs text-slate-400 font-medium">
+          <span>Reviewed by SignAm Compliance Team</span> • <span>June 2026</span>
+        </div>
+      </div>
+      
+      <h1 id="article-title" class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 serif-font !mt-4">
+        Loading...
+      </h1>
+
+      <div id="article-content" class="space-y-4 text-sm sm:text-base leading-relaxed text-slate-600"></div>
+    </article>
+
+    <!-- Contextual Pitch Sidebar -->
+    <aside class="lg:col-span-4 lg:sticky lg:top-24 h-fit">
+      <div class="relative overflow-hidden bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-5">
+        <!-- Subtle corner glow that feels premium, not robotic -->
+        <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-transparent pointer-events-none"></div>
+        
+        <div class="relative space-y-2">
+          <span class="text-emerald-600 font-bold tracking-wider text-[10px] uppercase bg-emerald-50 px-2 py-0.5 rounded-md">
+            IMPORTANT NOTE
+          </span>
+          <h3 class="text-base font-bold text-slate-900 tracking-tight leading-snug pt-1">
+            Paper agreements can still be easily denied or destroyed.
+          </h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Don't leave your business hanging on casual conversations or raw messaging text. Lock down agreements instantly using secure identity tracking.
+          </p>
+        </div>
+
+        <!-- Clean Audit Points matching your home page style -->
+        <div class="space-y-2.5 pt-1 text-xs text-slate-600 font-medium border-t border-slate-100">
+          <div class="flex items-start gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 mt-1.5 shrink-0"></span>
+            <span>Admissible under Evidence Act 2011</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 mt-1.5 shrink-0"></span>
+            <span>Recipient phone verified via SMS OTP</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 mt-1.5 shrink-0"></span>
+            <span>Secure cloud storage backup</span>
+          </div>
+        </div>
+
+        <!-- Action Button with active state and clean hover styles -->
+        <div class="pt-2">
+          <a href="login.html" class="group block w-full text-center font-bold text-xs text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 py-3.5 rounded-xl transition-all shadow-sm shadow-emerald-600/10 hover:-translate-y-px">
+            Create Agreement Now 
+            <span class="inline-block transition-transform group-hover:translate-x-0.5 ml-1">→</span>
+          </a>
+          <p class="text-[10px] text-center text-slate-400 mt-2.5 font-medium">
+            Takes less than 60 seconds from your browser
+          </p>
+        </div>
+      </div>
+    </aside>
+    </main>
+
+    <!-- Footer -->
+    
+    <footer class="bg-slate-900 text-slate-400 pt-16 pb-8 border-t border-slate-800">
+    <div class="max-w-6xl mx-auto px-4">
+      
+      <div class="grid grid-cols-2 md:grid-cols-12 gap-8 pb-12 border-b border-slate-800/60">
+        
+        <div class="col-span-2 md:col-span-5 space-y-4">
+          <div class="flex items-center gap-2 text-white">
+            <img src="apple-touch-icon.png" alt="SignAm Logo" class="w-9 h-9 object-contain">
+            <span class="font-bold text-lg tracking-tight">Sign<span class="text-emerald-500">Am</span></span>
+          </div>
+          <p class="text-[13px] text-slate-400 leading-relaxed max-w-sm">
+            Stop doing business by mouth alone to avoid stories. Turn your agreements into real, locked, and legally binding contracts that protect your money.
+          </p>
+        </div>
+
+        <div class="col-span-1 md:col-span-2 space-y-3 text-xs">
+          <h4 class="font-bold text-white uppercase tracking-wider text-[10px]">Product</h4>
+          <ul class="space-y-2 font-medium">
+            <li><a href="index.html" class="hover:text-emerald-500 transition-colors">Home</a></li>
+            <li><a href="dashboard.html" class="hover:text-emerald-500 transition-colors">Dashboard</a></li>
+            <li><a href="index.html#how-it-works" class="hover:text-emerald-500 transition-colors">How It Works</a></li>
+            <li><a href="index.html#pricing" class="hover:text-emerald-500 transition-colors">Pricing & Plans</a></li>
+          </ul>
+        </div>
+
+        <div class="col-span-1 md:col-span-2 space-y-3 text-xs">
+          <h4 class="font-bold text-white uppercase tracking-wider text-[10px]">Resources</h4>
+          <ul class="space-y-2 font-medium">
+            <li><a href="blog.html" class="hover:text-emerald-500 transition-colors">Legal Guides</a></li>
+            <li><a href="blog.html?id=is-a-digital-signature-legal-in-nigeria" class="hover:text-emerald-500 transition-colors">Compliance Info</a></li>
+            <li><a href="mailto:support@signam.com" class="hover:text-emerald-500 transition-colors">Help Support</a></li>
+          </ul>
+        </div>
+
+        <div class="col-span-2 md:col-span-3 space-y-3 text-xs">
+          <h4 class="font-bold text-white uppercase tracking-wider text-[10px]">Legal Framework</h4>
+          <ul class="space-y-2 font-medium text-slate-400">
+            <li class="flex items-center gap-1.5 text-slate-500">✓ Evidence Act 2011 Enforceable</li>
+            <li class="flex items-center gap-1.5 text-slate-500">✓ NIN Verification</li>
+            <li class="flex items-center gap-1.5 text-slate-500">✓ Secure SMS OTP Attestation</li>
+            <li class="flex items-center gap-1.5 text-slate-500">✓ Encrypted Verification Trail</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="pt-8 flex flex-col lg:flex-row items-center lg:items-start justify-between gap-6 text-xs font-medium">
+        
+        <div class="flex flex-col items-center lg:items-start gap-2">
+          <div class="text-slate-500">&copy; 2026 SignAm. All rights reserved. Made for Nigerians by Nigerians.</div>
+          <div class="flex items-center gap-3 text-slate-600">
+            <a href="privacy.html" class="hover:text-emerald-500 transition-colors">Privacy Policy</a>
+            <span>•</span>
+            <a href="terms.html" class="hover:text-emerald-500 transition-colors">Terms of Service</a>
+          </div>
+        </div>
+
+        <div class="text-slate-500 text-[11px] text-center lg:text-right max-w-xl leading-relaxed">
+          SignAm is a transactional technology infrastructure provider and is not a law firm. We do not provide structural legal advice, custom opinions, or individual courtroom representation.
+        </div>
+
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- Script Engine -->
+  <script>
+    // 1. High intent search data mapping
+    const articlesData = {
+      "what-to-do-when-someone-owes-you-money-in-nigeria-and-refuses-to-pay": {
+        title: "What to Do When Someone Owes You Money in Nigeria and refuses to pay",
+        desc: "Wondering what to do when someone owes you money in Nigeria and won't pay? Learn how to legally recover your funds, use small claims court, and protect your cash.",
+        tag: "Legal Advice",
+        content: `
+          <p class="font-semibold text-slate-800 text-base leading-relaxed">In Nigeria, lending money or giving goods on credit is easy; the real work starts when it’s time to get your money back.</p>
+          <p>Whether it’s a friend who promised to pay 'by weekend,' a client who vanished after receiving their order, or a vendor holding your deposit without delivering, being ghosted leaves you feeling helpless. If you are wondering exactly what to do when someone owes you money in Nigeria, the legal system provides clear pathways—if you take a structured approach.</p>
+          
+          <h3 class="text-lg font-bold text-slate-900 pt-4 serif-font">Can I involve the Police if someone owes me money?</h3>
+          <p>This is the most common question people ask. By law, the Nigerian Police Force is not a debt collection agency, and civil contract breaches are outside their jurisdiction. However, if the person intentionally used a fake identity, presented a cloned bank transfer alert, or collected money for goods they never possessed, it transitions into a criminal offense known as <em>Obtaining Under False Pretences</em>. In that specific scam scenario, you can legally file a criminal petition.</p>
+
+          <h3 class="text-lg font-bold text-slate-900 pt-4 serif-font">Step 1: Gather your evidence trail before acting</h3>
+          <p>In Nigeria, the burden of proof rests entirely on you. If you make official claims with just verbal accusations, a debtor can easily deny it. Gather an unedited compilation of bank transfer receipts, WhatsApp chat screenshots where they explicitly acknowledged the debt balance, and any receipts or paper agreements issued.</p>
+          <p class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl my-4 text-xs text-amber-900 leading-relaxed">
+            <strong>Important:</strong> Do not post the debtor’s face or details on Instagram, X, or TikTok to shame them. Under Nigerian cyber-bullying and defamation laws, they can sue you for damages, which could completely cancel out the money they owe you. Keep the process professional.
+          </p>
+
+          <h3 class="text-lg font-bold text-slate-900 pt-4 serif-font">Step 2: Serve a formal Letter of Demand</h3>
+          <p>If casual reminders fail, the next step is moving the conversation from informal text messages to formal legal notice via a <strong>Letter of Demand</strong>.</p>
+          <p>This is a document that outlines the exact balance due, the history of the transaction, and sets a strict timeline (usually 7 to 14 days) for complete payment. It warns the debtor that failure to comply will result in immediate litigation. Over 65% of Nigerian debt defaults are resolved here because debtors realize you are tracking them formally.</p>
+
+          <h3 class="text-lg font-bold text-slate-900 pt-4 serif-font">Step 3: Take them to Small Claims Court</h3>
+          <p>If the deadline expires and they still refuse to comply, you don't need a massive budget for a lawyer. States like Lagos, Abuja, and Oyo operate specialized <strong>Small Claims Courts</strong>. These courts handle financial disputes below a specific cap, bypass classic multi-year judicial delays, and are mandated to deliver final judgments within 60 days.</p>
+
+          <h3 class="text-lg font-bold text-slate-900 pt-4 serif-font">How to protect your money from the start</h3>
+          <p>The hardest time to fix an evidence trail is <em>after</em> a default has happened. Once someone blocks you on WhatsApp, your options shrink.</p>
+          <p>The smartest defense is locking down the transaction before any money leaves your bank app. By signing an agreement linked to verified credentials like a National Identification Number (NIN) via a secure system, you create a tamper-proof digital record that cannot be denied or disputed in a Nigerian court.</p>
+        `
+      },
+
+      "how-to-make-a-legally-binding-contract-in-nigeria": {
+        title: "How to Make a Legally Binding Contract in Nigeria",
+        desc: "Do you need a lawyer or a red seal to make an agreement legal? Learn the 5 basic rules of how to make a contract in Nigeria that stands up in court.",
+        tag: "Legal Advice",
+        content: `
+          <p class="font-semibold text-slate-800 text-base leading-relaxed">One of the biggest myths in Nigeria is that an agreement is only valid if it was drafted by a lawyer, printed on thick paper, or decorated with a red wax seal.</p>
+          <p>The truth is, under the Nigerian law of contract, you don't need expensive ceremonies to protect your deals. Whether you are partnering on a business, selling a phone, or renting out an apartment, you can create a perfectly valid contract yourself—provided you satisfy a few basic legal rules.</p>
+          
+          <h3 class="text-lg font-bold text-slate-900 pt-4 serif-font">What makes an agreement legally valid in Nigeria?</h3>
+          <p>For any contract to hold water before a Nigerian magistrate or high court judge, it must have these 4 essential ingredients:</p>
+          <ul class="list-disc pl-5 space-y-2">
+            <li><strong>Offer:</strong> One party must make a clear proposition (e.g., "I will build this website for you for ₦250,000").</li>
+            <li><strong>Acceptance:</strong> The other party must accept that exact offer without changing the terms. Saying "I will pay ₦200,000 instead" is not acceptance; it is a counter-offer.</li>
+            <li><strong>Consideration:</strong> This is the value exchanged. It doesn’t have to be money, but something of value must change hands (e.g., your service in exchange for their cash).</li>
+            <li><strong>Intention to Create Legal Relations:</strong> Both parties must clearly intend for the deal to be an official commitment, not a casual joke or a family favor.</li>
+          </ul>
+
+          <h3 class="text-lg font-bold text-slate-900 pt-4 serif-font">Does a contract have to be written to be enforceable?</h3>
+          <p>Technically, no. Verbal agreements are recognized in Nigeria. However, the real problem is <strong>proof</strong>. If a dispute breaks out six months later, a verbal contract quickly turns into an argument of "your word against mine."</p>
+          <p>When you put your terms in writing—even a simple document—it serves as permanent proof of exactly what everybody agreed to do.</p>
+
+          <h3 class="text-lg font-bold text-slate-900 pt-4 serif-font">Can a digital contract stand up in a Nigerian Court?</h3>
+          <p>Yes. Under the <strong>Nigerian Evidence Act</strong>, electronic signatures and digital agreements carry the exact same legal weight as a physical pen-and-paper contract. You do not need to print out a document or search for blue ink to make it binding.</p>
+          <p>However, to be safe, a digital contract needs to prove exactly <em>who</em> signed it and that the text wasn’t tampered with afterward.</p>
+
+          <h3 class="text-lg font-bold text-slate-900 pt-4 serif-font">How to create your contract using SignAm</h3>
+          <p>Instead of downloading complex legal templates that you don't fully understand, you can use SignAm to lock down your agreements instantly. By typing your straightforward terms and sending it to the other party's phone, you tie the agreement to verified identity parameters. It takes less than a minute, works on any mobile screen, and protects your business before stories begin.</p>
+        `
+      },
+
+      "how-to-write-a-loan-agreement": {
+        title: "How to Write a Loan Agreement Form in Nigeria (Legally Binding)",
+        desc: "Learn how to write an enforceable loan contract format in Nigeria to safeguard your cash. Legal parameters, templates, and evidence rules explained.",
+        tag: "Debt Recovery",
+        content: `
+          <p class="font-semibold text-slate-800 text-base">Lending money to friends, family, or business partners in Nigeria without formal paperwork is the fastest way to lose both the relationship and your capital.</p>
+          <p>Under Nigerian law, a verbal contract is technically legal, but proving it in court when the individual defaults is almost impossible. To ensure your agreement has real legal weight, it must explicitly outline specific milestones.</p>
+          
+          <h3 class="text-lg font-bold text-slate-900 pt-4 serif-font">Essential Requirements for an Enforceable Loan Agreement</h3>
+          <ul class="list-disc pl-5 space-y-2">
+            <li><strong>Clear Identity Proof:</strong> Full legal names matching their government identities, not just casual social nicknames or WhatsApp handles.</li>
+            <li><strong>The Principal Amount & Interest Structure:</strong> The exact figure lent and whether any interest or late fees accrue over time.</li>
+            <li><strong>Definite Repayment Timeline:</strong> A specific date or clear instalment framework (e.g., "The 5th day of every consecutive month").</li>
+            <li><strong>Default Penalty Terms:</strong> What occurs if the payment deadline passes without fulfillment?</li>
+          </ul>
+
+          <h3 class="text-lg font-bold text-slate-900 pt-4 serif-font">The Danger of Simple Paper Downloads</h3>
+          <p>Most small business owners download a random sample PDF from Google, fill it out manually, and store it. If a dispute arises, the debtor can easily claim: <em>'That is not my signature,'</em> or <em>'I wasn't the one who signed that paper.'</em></p>
+          <p>This is why using digital systems linked directly to verified credentials (like a National Identification Number) provides structural protection that raw paper or casual chats cannot duplicate.</p>
+        `
+      },
+      "how-to-write-a-freelance-agreement": {
+        title: "Freelance Service Contract Agreement Format for Nigerian Creatives",
+        desc: "How to protect your payments as a Nigerian web developer, designer, or copywriter. Stop clients from ghosting you after delivery.",
+        tag: "Freelance & Remote",
+        content: `
+          <p class="font-semibold text-slate-800 text-base">Every Nigerian freelancer has a horror story about a client who promised payment upon completion, only to stop replying to messages once the work was delivered.</p>
+          <p>A professional scope statement avoids scope creep and sets clear boundaries regarding downpayments, revisions, and intellectual property releases.</p>
+          
+          <h3 class="text-lg font-bold text-slate-900 pt-4 serif-font">Key Terms Your Service Contract Must Contain</h3>
+          <ul class="list-disc pl-5 space-y-2">
+            <li><strong>The Deposit Threshold:</strong> Never begin execution without a locked commitment (e.g., 50% upfront) verified in writing.</li>
+            <li><strong>Milestone Sign-offs:</strong> Break large build schedules into verifiable components so you get paid as you go.</li>
+            <li><strong>IP Ownership Transfer:</strong> Explicitly state that the copyright and source code only shift to the buyer *after* the final balance is settled in full.</li>
+          </ul>
+          <p class="pt-2">Having this locked down electronically stops clients from assuming they can delay your money without consequences.</p>
+        `
+      },
+      "is-a-digital-signature-legal-in-nigeria": {
+        title: "Is a Digital Signature Legally Binding in Nigeria?",
+        desc: "What the Nigerian Evidence Act 2011 says about electronic signatures, digital contracts, and WhatsApp agreement admissibility in court.",
+        tag: "Legal Compliance",
+        content: `
+          <p class="font-semibold text-slate-800 text-base">Many people in Nigeria still believe an agreement is only valid if it features a blue-ink physical signature and a red wax seal. This is entirely false.</p>
+          <p>Under <strong>Section 93 of the Nigerian Evidence Act 2011</strong>, electronic and digital signatures are fully recognized and carries the same legal authority as a handwritten pen signature.</p>
+          
+          <h3 class="text-lg font-bold text-slate-900 pt-4 serif-font">What Makes a Digital Contract Valid in a Nigerian Court?</h3>
+          <p>To satisfy the strict standards of <strong>Section 84 of the Evidence Act</strong> regarding computer-generated electronic records, you must satisfy three core conditions:</p>
+          <ul class="list-disc pl-5 space-y-2">
+            <li><strong>Authenticity:</strong> You must be able to prove the signature actually belongs to the person who supposedly signed it.</li>
+            <li><strong>Integrity:</strong> You must prove the document has not been altered, tampered with, or modified after the signing occurred.</li>
+            <li><strong>Non-Repudiation:</strong> The tracking details must be so secure that the signer cannot falsely claim, <em>'My phone was stolen,'</em> or <em>'I didn't authorize that.'</em></li>
+          </ul>
+          <p class="pt-2">Using an infrastructure like SignAm satisfies these parameters natively by embedding real-time identity lookups, device tracking, and instant SMS OTP validation into the document metadata.</p>
+        `
+      },
+      "landlord-keeping-caution-deposit": {
+        title: "Landlord Keeping Your Caution Deposit? Legal Steps for Nigerian Tenants",
+        desc: "Your legal rights as a tenant in Nigeria. How to recover your caution fees when your house landlord or estate agent refuses to refund.",
+        tag: "Property & Rental",
+        content: `
+          <p class="font-semibold text-slate-800 text-base">In Nigeria, caution deposits are frequently treated by landlords as bonus income rather than refundable money held in trust.</p>
+          <p>By default, unless physical damage is explicitly proven, your caution fee must be returned to you at the expiration of your tenancy. Sadly, thousands of tenants lose this money because their tenancy agreements were vague or entirely verbal.</p>
+          
+          <h3 class="text-lg font-bold text-slate-900 pt-4 serif-font">How to Ensure Your Caution Fee Comes Back Safely</h3>
+          <ul class="list-disc pl-5 space-y-2">
+            <li><strong>Pre-Move Inspection Log:</strong> Take clear photos of any pre-existing faults before moving in and link them to your initial agreement.</li>
+            <li><strong>Explicit Refunding Criteria:</strong> Your contract must explicitly state a specific timeframe for refunds (e.g., "Within 14 business days of moving out").</li>
+            <li><strong>Formal Notice:</strong> If they refuse to pay, a written demand referencing your signed, timestamped agreement changes the entire tone of the conversation.</li>
+          </ul>
+        `
+      },
+      "how-to-send-money-in-nigeria": {
+        title: "How to Send Money in Nigeria and Have Bulletproof Legal Proof",
+        desc: "A bank transfer receipt isn't always enough to prove a business transaction. Learn how to tie bank transactions directly to locked legal terms.",
+        tag: "Business Advice",
+        content: `
+          <p class="font-semibold text-slate-800 text-base">When you send a bank transfer in Nigeria, the transaction receipt only proves that money moved from Account A to Account B. It does *not* prove what the money was for.</p>
+          <p>If you transfer ₦2,000,000 for a car purchase and the seller vanishes, they can easily argue in court that the money was a gift, a long-term loan repayment, or for an entirely different transaction.</p>
+          
+          <h3 class="text-lg font-bold text-slate-900 pt-4 serif-font">The Right Way to Make High-Value Business Payments</h3>
+          <p>Before you tap 'Send' or input your bank token pin, make sure you complete this sequence:</p>
+          <ul class="list-disc pl-5 space-y-2">
+            <li><strong>Tie the Reference to a Contract:</strong> In the transfer description field, input the exact reference number of your agreement.</li>
+            <li><strong>Execute Before Payment:</strong> Never drop a downpayment based on a verbal assurance of "I will send the receipt later."</li>
+            <li><strong>Lock the Purpose:</strong> Ensure both parties sign an electronic record capturing the precise exchange details before any funds leave your account.</li>
+          </ul>
+        `
+      },
+      "how-to-write-a-vendor-agreement": {
+        title: "Vendor Agreement Guide for Nigerian Events and Small Businesses",
+        desc: "Essential clauses for catering, photography, decoration, and makeup vendors in Nigeria to handle sudden date changes or cancellations.",
+        tag: "Vendor Operations",
+        content: `
+          <p class="font-semibold text-slate-800 text-base">Nigerian event vendors (caterers, MCs, decorators, makeup artists, photographers) are highly vulnerable to sudden planning adjustments and outright cancellations.</p>
+          <p>When an event date gets shifted or canceled entirely, a simple verbal chat about deposits leads straight to bad blood, heated arguments, and social media call-outs.</p>
+          
+          <h3 class="text-lg font-bold text-slate-900 pt-4 serif-font">3 Clauses Every Event Vendor Contract Needs</h3>
+          <ul class="list-disc pl-5 space-y-2">
+            <li><strong>Non-Refundable Retainer Fee:</strong> Explicitly state that the booking deposit is non-refundable because it blocks other paying clients from booking that same calendar date.</li>
+            <li><strong>Postponement Penalty:</strong> Specify exactly what it costs the client if they move the date within 30 days of the planned event.</li>
+            <li><strong>Force Majeure (Unforeseen Disasters):</strong> Detail what happens if extreme weather, government bans, or fuel scarcities prevent fulfillment.</li>
+          </ul>
+        `
+      }
+    };
+
+    // 2. Injector Logic
+    const params = new URLSearchParams(window.location.search);
+    const articleId = params.get('id');
+    const data = articlesData[articleId];
+
+    if (data) {
+      document.getElementById('seo-title').innerText = data.title + " | SignAm";
+      document.getElementById('seo-desc').setAttribute('content', data.desc);
+      document.getElementById('article-tag').innerText = data.tag.toUpperCase();
+      document.getElementById('article-title').innerText = data.title;
+      document.getElementById('article-content').innerHTML = data.content;
+    } else {
+      // Fallback if ID doesn't exist
+      document.getElementById('article-title').innerText = "Guide Not Found";
+      document.getElementById('article-content').innerHTML = "<p>The requested educational guide could not be found. Please head back to the <a href='blog.html' class='text-emerald-600 font-bold'>main blog list</a>.</p>";
+    }
+  </script>
+</body>
+</html>

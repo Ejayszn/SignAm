@@ -13,16 +13,49 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 p-6 md:p-12 max-w-3xl mx-auto space-y-6">
+
+  <nav class="mb-8 flex items-center">
+    <a href="index.html" class="inline-flex items-center text-sm font-medium text-slate-500 hover:text-emerald-600 transition-colors gap-1.5">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+      </svg>
+      Back to Home
+    </a>
+  </nav>
+
   <h1 class="text-3xl font-bold tracking-tight text-slate-900">Privacy Policy</h1>
   <p class="text-xs text-slate-400">Last Updated: June 2026</p>
   <hr class="border-slate-200">
   
-  <section class="space-y-3 text-sm leading-relaxed">
-    <h2 class="text-lg font-bold text-slate-900">1. Data We Collect</h2>
-    <p>We log minimal identifier metrics including full names, authentication email structures, associated telephone numbers, and vector canvas signature snapshots strictly necessary to formulate and generate your dynamic legal agreement documents.</p>
+  <section class="space-y-4 text-sm leading-relaxed">
+    <h2 class="text-lg font-bold text-slate-900">1. Data We Collect & Process</h2>
+    <p>To provide contract execution services, we collect and process:</p>
+    <ul class="list-disc pl-5 space-y-1">
+      <li><strong>Identity Information:</strong> Full names, email addresses, and phone numbers.</li>
+      <li><strong>Verification Data:</strong> National Identification Numbers (NIN) for identity validation, processed securely in accordance with the Nigeria Data Protection Act (NDPA).</li>
+      <li><strong>Signature Data:</strong> Vector canvas signature snapshots, OTP verification logs, and audit trail metadata.</li>
+    </ul>
     
-    <h2 class="text-lg font-bold text-slate-900">2. Data Security</h2>
-    <p>All authentication session states and user metadata configurations are stored natively on secure Firebase cloud infrastructure modules. We do not sell or lease user contract contents or metadata channels to third-party ad engines.</p>
+    <h2 class="text-lg font-bold text-slate-900">2. How We Share Data (Third Parties)</h2>
+    <p>We do not sell your personal data. We securely transmit data to authorized third parties solely to complete your transactions:</p>
+    <ul class="list-disc pl-5 space-y-1">
+      <li><strong>Identity Verification:</strong> Government-approved verification partners to validate NIN details.</li>
+      <li><strong>Payment Processing:</strong> Paystack, for processing standard and enterprise subscription payments safely.</li>
+      <li><strong>Infrastructure:</strong> Firebase Cloud Services for secure database storage and hosting.</li>
+    </ul>
+
+    <h2 class="text-lg font-bold text-slate-900">3. Data Security & Retention</h2>
+    <p>All authentication session states and user metadata configurations are stored natively on secure Firebase cloud infrastructure. Signed documents and audit trails are retained securely until a deletion request is initiated by the contract creator, subject to statutory legal record-keeping requirements under Nigerian law.</p>
+    
+    <h2 class="text-lg font-bold text-slate-900">4. Your Data Protection Rights</h2>
+    <p>Under the Nigeria Data Protection Act (NDPA), you have the right to access, rectify, or request the erasure of your personal data. Recipient data collected solely for contract signing (such as phone numbers for OTP verification) is retained strictly to maintain the integrity of the agreement's immutable audit trail.</p>
+
+    <h2 class="text-lg font-bold text-slate-900">5. Document Privacy & Access</h2>
+    <p>The contents of your generated PDFs are private to the signing parties. SignAm systems access document text strictly through automated pipelines—such as using secure AI models via Groq API to parse clauses during the creation wizard—solely to assist in document formatting or enterprise template generation.</p>
   </section>
+  <footer class="pt-6 border-t border-slate-200 text-xs text-slate-500 flex justify-between items-center">
+    <p>&copy; 2026 SignAm. All rights reserved.</p>
+    <p>Want to review our rules? Read our <a href="terms.html" class="text-emerald-600 hover:underline font-medium">Terms of Service</a>.</p>
+  </footer>
 </body>
 </html>
