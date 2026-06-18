@@ -318,7 +318,7 @@ authForm.addEventListener('submit', async (e) => {
       submitAuthBtn.textContent = 'Creating account...';
       const credential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(credential.user, { displayName });
-      showSuccess(`Welcome to SignAm, ${displayName}! Account created.`, 'home.html');
+      showSuccess(`Welcome to SignAm, ${displayName}! Account created.`, 'dashboard.html');
       return;
     }
 
@@ -330,7 +330,7 @@ authForm.addEventListener('submit', async (e) => {
     await setPersistence(auth, persistence);
 
     await signInWithEmailAndPassword(auth, email, password);
-    showSuccess('Welcome back! Opening your workspace...', 'home.html');
+    showSuccess('Welcome back! Opening your workspace...', 'dashboard.html');
 
   } catch (err) {
     showBannerError(getFriendlyError(err.code));
@@ -355,7 +355,7 @@ googleAuthBtn.addEventListener('click', async () => {
   try {
     const result = await signInWithPopup(auth, googleProvider);
     const name = result.user.displayName || 'User';
-    showSuccess(`Welcome, ${name}! Syncing your workspace...`, 'home.html');
+    showSuccess(`Welcome, ${name}! Syncing your workspace...`, 'dashboard.html');
   } catch (err) {
     showBannerError(getFriendlyError(err.code));
     googleAuthBtn.disabled = false;
