@@ -386,13 +386,8 @@
     </div>
 
     <div class="max-w-3xl mx-auto">
-      <div class="flex items-center justify-center gap-2 mb-8">
-        <button id="showAgreementBtn" class="rounded-full px-4 py-2 text-sm font-semibold transition bg-emerald-600 text-white">
-          Per agreement
-        </button>
-        <button id="showMonthlyBtn" class="rounded-full px-4 py-2 text-sm font-semibold transition bg-slate-100 text-slate-700">
-          Monthly plan
-        </button>
+      <div class="text-center mb-8">
+        <span class="text-sm font-semibold text-slate-700">Pay per agreement pricing</span>
       </div>
 
       <div id="stepPlan" class="grid grid-cols-1 gap-8">
@@ -450,62 +445,6 @@
             </ul>
             <a href="login.html" class="block w-full text-center font-bold text-sm text-white bg-emerald-600 hover:bg-emerald-700 py-3 rounded-2xl transition-all shadow-md shadow-emerald-600/10">
               Start Business Agreement →
-            </a>
-          </div>
-        </div>
-
-        <div id="monthlyPlanSection" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <!-- Pro Growth subscription tier -->
-          <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm relative flex flex-col justify-between h-full">
-            <div class="flex-1 space-y-6">
-              <div class="flex flex-col">
-            <div class="flex items-center justify-between gap-3">
-              <h3 class="text-lg font-bold text-slate-900">Pro Growth Plan</h3>
-              <span class="text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded-full">Subscription</span>
-            </div>
-            <div class="mt-1 flex items-baseline gap-2">
-              <span class="text-4xl font-extrabold text-slate-900">₦4,500</span>
-              <span class="text-sm text-slate-600">/mo</span>
-            </div>
-            <p class="text-xs text-slate-500 mt-2 min-h-[32px] sm:min-h-[40px]">Best for frequent creators, freelancers, and active agents.</p>
-          </div>
-              <hr class="border-slate-100">
-              <ul class="space-y-3 text-xs font-medium text-slate-700">
-                <li class="flex items-center gap-2 text-slate-900">✓ Unlimited Personal Contracts</li>
-                <li class="flex items-center gap-2 text-slate-900">✓ Advanced Audit Trails</li>
-                <li class="flex items-center gap-2 text-slate-900">✓ Priority WhatsApp/SMS</li>
-                <li class="flex items-center gap-2 text-slate-900">✓ Saves money after 3 contracts</li>
-              </ul>
-            </div>
-            <a id="selectProSubscriptionBtn" href="login.html" class="block w-full text-center font-bold text-sm text-white bg-amber-600 hover:bg-amber-700 py-3 rounded-2xl transition-all shadow-md shadow-amber-600/10 mt-8">
-              Subscribe →
-            </a>
-          </div>
-
-          <!-- Business Unlimited subscription tier -->
-          <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm relative flex flex-col justify-between h-full">
-            <div class="flex-1 space-y-6">
-              <div class="flex flex-col">
-            <div class="flex items-center justify-between gap-3">
-              <h3 class="text-lg font-bold text-slate-900">Business Unlimited Plan</h3>
-              <span class="text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded-full">Subscription</span>
-            </div>
-            <div class="mt-1 flex items-baseline gap-2">
-              <span class="text-4xl font-extrabold text-slate-900">₦15,000</span>
-              <span class="text-sm text-slate-600">/mo</span>
-            </div>
-            <p class="text-xs text-slate-500 mt-2 min-h-[32px] sm:min-h-[40px]">Tailored for corporate setups, agencies, and teams onboarding clients constantly.</p>
-          </div>
-              <hr class="border-slate-100">
-              <ul class="space-y-3 text-xs font-medium text-slate-700">
-                <li class="flex items-center gap-2 text-slate-900">✓ Everything in Business Plan</li>
-                <li class="flex items-center gap-2 text-slate-900">✓ Unlimited Contract Generation</li>
-                <li class="flex items-center gap-2 text-slate-900">✓ Custom Branding & Logo</li>
-                <li class="flex items-center gap-2 text-slate-900">✓ Master Clause Library</li>
-              </ul>
-            </div>
-            <a id="selectBizSubscriptionBtn" href="login.html" class="block w-full text-center font-bold text-sm text-white bg-amber-600 hover:bg-amber-700 py-3 rounded-2xl transition-all shadow-md shadow-amber-600/10 mt-8">
-              Subscribe →
             </a>
           </div>
         </div>
@@ -639,36 +578,6 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       setTimeout(tick, 600);
-
-      const showAgreementBtn = document.getElementById('showAgreementBtn');
-      const showMonthlyBtn = document.getElementById('showMonthlyBtn');
-      const payPerAgreementSection = document.getElementById('payPerAgreementSection');
-      const monthlyPlanSection = document.getElementById('monthlyPlanSection');
-      const pricingNote = document.getElementById('pricingNote');
-
-      function setPricingTab(tab) {
-        if (tab === 'agreement') {
-          payPerAgreementSection.classList.remove('hidden');
-          monthlyPlanSection.classList.add('hidden');
-          showAgreementBtn.classList.add('bg-emerald-600', 'text-white');
-          showAgreementBtn.classList.remove('bg-slate-100', 'text-slate-700');
-          showMonthlyBtn.classList.add('bg-slate-100', 'text-slate-700');
-          showMonthlyBtn.classList.remove('bg-emerald-600', 'text-white');
-          pricingNote.textContent = 'Pay per agreement. No subscriptions, no hidden fees.';
-        } else {
-          payPerAgreementSection.classList.add('hidden');
-          monthlyPlanSection.classList.remove('hidden');
-          showMonthlyBtn.classList.add('bg-amber-600', 'text-white');
-          showMonthlyBtn.classList.remove('bg-slate-100', 'text-slate-700');
-          showAgreementBtn.classList.add('bg-slate-100', 'text-slate-700');
-          showAgreementBtn.classList.remove('bg-emerald-600', 'text-white');
-          pricingNote.textContent = 'Monthly plan prices billed every 30 days. Cancel anytime.';
-        }
-      }
-
-      showAgreementBtn.addEventListener('click', () => setPricingTab('agreement'));
-      showMonthlyBtn.addEventListener('click', () => setPricingTab('monthly'));
-      setPricingTab('agreement');
     });
   </script>
 </body>
