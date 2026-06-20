@@ -16,7 +16,6 @@
 </head>
 <body class="bg-slate-50 text-slate-900 antialiased">
 
-  <!-- Simple Header -->
   <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/80">
     <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
       <a href="index.html" class="flex items-center gap-2">
@@ -27,7 +26,6 @@
     </div>
   </header>
 
-  <!-- Hero Section -->
   <section class="py-20 bg-white border-b border-slate-200/60">
     <div class="max-w-6xl mx-auto px-6 text-center space-y-4">
       <span class="inline-block text-[11px] font-bold uppercase tracking-widest text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">Our Story</span>
@@ -38,69 +36,88 @@
     </div>
   </section>
 
-  <!-- Main Multi-Column Content Layout -->
   <main class="max-w-6xl mx-auto px-6 py-16">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-      
-      <!-- Left Hand Side: Narrative Text Pillars -->
-      <div class="lg:col-span-7 space-y-12">
-        
+
+      <!-- ── RIGHT: Founder card — appears FIRST on mobile via order ── -->
+      <div class="lg:col-span-5 lg:sticky lg:top-24 order-first lg:order-last">
+        <div class="bg-white border border-slate-200 rounded-3xl p-8 text-center space-y-6 shadow-sm">
+          <div class="w-48 h-48 sm:w-56 sm:h-56 bg-slate-100 rounded-2xl mx-auto overflow-hidden border-4 border-white shadow-md transition-transform duration-300 hover:scale-[1.02]">
+            <img src="founder-pic.jpg" alt="Emmanuel Oguibe — Founder of SignAm" class="w-full h-full object-cover">
+          </div>
+          <div class="space-y-1">
+            <h3 class="text-xl font-bold text-slate-900 tracking-tight">Emmanuel Oguibe</h3>
+            <p class="text-xs font-bold uppercase tracking-wider text-emerald-600">Founder & CEO, SignAm</p>
+          </div>
+          <blockquote class="text-sm text-slate-500 max-w-sm mx-auto leading-relaxed italic border-t border-slate-100 pt-4">
+            "Protecting your money and business shouldn't require a massive legal budget. If you know how to make a quick bank transfer, you already have everything you need to lock in your contract safely. SignAm is the first step towards a future where every Nigerian can do business with confidence."
+          </blockquote>
+        </div>
+      </div>
+
+      <!-- ── LEFT: Narrative — appears SECOND on mobile ── -->
+      <div class="lg:col-span-7 space-y-12 order-last lg:order-first">
+
         <!-- Section 1: The Problem -->
         <div class="space-y-4">
           <h2 class="text-xl font-bold text-slate-900 tracking-tight">The Problem with Doing Business by Mouth</h2>
           <p class="text-sm sm:text-base text-slate-600 leading-relaxed">
-            In Nigeria, trust is expensive. Too many freelancers get ghosted after submission, vendors get blindsided by unexpected client cancellations, and casual loans turn lifelong friends into bitter strangers. 
+            In Nigeria, trust is expensive. Too many freelancers get ghosted after submission, vendors get blindsided by unexpected client cancellations, and casual loans turn lifelong friends into bitter strangers.
           </p>
           <p class="text-sm sm:text-base text-slate-600 leading-relaxed">
-            It’s not always because people mean bad; it’s because memory fades and unwritten terms leave room for convenient excuses. But renting a traditional lawyer for a basic ₦50,000 deal doesn't make financial sense either. We realized everyday Nigerians needed a simple, legal shield that works instantly on a mobile phone.
+            It's not always because people mean bad — it's because memory fades and unwritten terms leave room for convenient excuses. But renting a traditional lawyer for a basic ₦50,000 deal doesn't make financial sense either. We realized everyday Nigerians needed a simple, legal shield that works instantly on a mobile phone.
           </p>
         </div>
 
-        <!-- Section 3: The TaxC Pedigree (The Authority Builder) -->
+        <!-- Section 2: What We Built -->
+        <div class="space-y-4">
+          <h2 class="text-xl font-bold text-slate-900 tracking-tight">What We Actually Built</h2>
+          <p class="text-sm sm:text-base text-slate-600 leading-relaxed">
+            SignAm lets you type your deal terms, verify both parties with NIN and phone OTP, sign with your finger, and share a locked agreement link in under a minute — all from your browser, no app download needed.
+          </p>
+          <p class="text-sm sm:text-base text-slate-600 leading-relaxed">
+            Once both parties sign, the contract is permanently locked in our system with full audit trail metadata: timestamps, IP addresses, device info, and verified identity records. It can't be edited, deleted, or denied. That signed PDF becomes court-ready evidence under the Nigerian Evidence Act 2011.
+          </p>
+        </div>
+
+        <!-- Section 3: TaxC Pedigree -->
         <div class="bg-emerald-50/60 text-slate-900 rounded-3xl p-6 sm:p-8 space-y-6 relative overflow-hidden shadow-sm border border-emerald-100">
-          <!-- Soft Emerald Radial Accent -->
           <div class="absolute -right-16 -bottom-16 w-48 h-48 bg-emerald-200/40 rounded-full blur-3xl pointer-events-none"></div>
-          
+
           <div class="flex flex-col sm:flex-row gap-6 items-start justify-between relative z-10">
-            <!-- Text & Stats Column -->
             <div class="space-y-4 flex-1">
               <span class="inline-block text-[9px] font-bold uppercase tracking-widest text-emerald-700 bg-emerald-100/80 border border-emerald-200 px-2 py-0.5 rounded-full">Proven Track Record</span>
-              
               <h2 class="text-2xl font-bold tracking-tight serif-font">Before SignAm, there was TaxC</h2>
-              
               <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                We aren't trying our luck with infrastructure we don't understand. SignAm is built on top of insights gained from our first flagship application, <strong class="text-slate-900">TaxC</strong>. 
+                We aren't trying our luck with infrastructure we don't understand. SignAm is built on top of insights gained from our first flagship application, <strong class="text-slate-900">TaxC</strong>.
               </p>
             </div>
-
-            <!-- TaxC Logo Column -->
             <div class="w-16 h-16 sm:w-20 sm:h-20 shrink-0 bg-white border border-emerald-200/60 rounded-2xl p-2 shadow-sm overflow-hidden group flex items-center justify-center">
               <img src="taxc.png" alt="TaxC Logo" class="max-w-full max-h-full object-contain rounded-lg group-hover:scale-105 transition-all duration-300">
             </div>
           </div>
 
-          <!-- Clean Divider and Counters -->
           <div class="grid grid-cols-2 gap-4 pt-4 border-t border-emerald-200/60 relative z-10">
             <div class="space-y-0.5">
               <p class="text-3xl font-extrabold text-emerald-600">8,000+</p>
-              <p class="text-[11px] text-slate-500 font-medium tracking-wide">Users in just 4 Months</p>
+              <p class="text-[11px] text-slate-500 font-medium tracking-wide">Registered Users</p>
             </div>
             <div class="space-y-0.5">
               <p class="text-3xl font-extrabold text-emerald-600">100%</p>
               <p class="text-[11px] text-slate-500 font-medium tracking-wide">Nigerian Compliance</p>
             </div>
           </div>
-          
+
           <p class="text-xs text-slate-500 leading-relaxed border-t border-emerald-200/60 pt-4 relative z-10">
-            Over the past months, TaxC(<a href="https://taxc.com.ng" class="text-emerald-600 hover:underline">taxc.com.ng</a>) has helped thousands of Nigerian citizens, remote professionals, and small businesses navigate the complex Nigerian taxation system. We specialized in breaking down complex personal income tax laws into seamless, automated calculations that anyone can understand.
+            TaxC (<a href="https://taxc.com.ng" class="text-emerald-600 hover:underline">taxc.com.ng</a>) has helped thousands of Nigerian citizens, remote professionals, and small businesses navigate the complex Nigerian taxation system — automating calculations that would otherwise require an expensive accountant.
           </p>
         </div>
 
-        <!-- Section 4: Looking Forward -->
+        <!-- Section 4: Vision -->
         <div class="space-y-4">
           <h2 class="text-xl font-bold text-slate-900 tracking-tight">The Vision for SignAm</h2>
           <p class="text-sm sm:text-base text-slate-600 leading-relaxed">
-            With SignAm, we are applying that exact same approach—taking dense legal backing like the Nigerian Evidence Act 2011 and secure infrastructure like NIN identity validation—and bundling it into a tool you can use while chatting on WhatsApp or meeting in an open market.
+            With SignAm, we are applying that exact same approach — taking dense legal backing like the Nigerian Evidence Act 2011 and secure infrastructure like NIN identity validation — and bundling it into a tool you can use while chatting on WhatsApp or meeting in an open market.
           </p>
           <p class="text-sm sm:text-base text-slate-600 leading-relaxed">
             No more ambiguous agreements. No more unnecessary losses. Let's build a standard where promises are locked, kept, and legally respected.
@@ -108,27 +125,9 @@
         </div>
 
       </div>
-
-      <!-- Right Hand Side: Sticky Big Founder Profile Centerpiece -->
-      <div class="lg:col-span-5 lg:sticky lg:top-24">
-        <div class="bg-white border border-slate-200 rounded-3xl p-8 text-center space-y-6 shadow-sm">
-          <div class="w-48 h-48 sm:w-56 sm:h-56 bg-slate-100 rounded-2xl mx-auto overflow-hidden border-4 border-white shadow-md transition-transform duration-300 hover:scale-[1.02]">
-            <img src="founder-pic.jpg" alt="SignAm Founder" class="w-full h-full object-cover">
-          </div>
-          <div class="space-y-1">
-            <h3 class="text-xl font-bold text-slate-900 tracking-tight">Built for Nigerians, by Nigerians</h3>
-            <p class="text-xs font-bold uppercase tracking-wider text-emerald-600">Founder & CEO</p>
-          </div>
-          <blockquote class="text-sm text-slate-500 max-w-sm mx-auto leading-relaxed italic border-t border-slate-100 pt-4">
-            "Protecting your money and business shouldn’t require a massive legal budget. If you know how to make a quick bank transfer, you already have everything you need to lock in your contract safely. SignAm is the first step towards a future where every Nigerian can do business with confidence."
-          </blockquote>
-        </div>
-      </div>
-
     </div>
   </main>
 
-  <!-- Call to Action -->
   <section class="bg-white border-t border-slate-200/80 py-14 text-center">
     <div class="max-w-md mx-auto px-4 space-y-4">
       <p class="text-sm text-slate-500 font-medium">Are you ready to change how you handle deals?</p>
@@ -138,7 +137,6 @@
     </div>
   </section>
 
-  <!-- Footer -->
   <footer class="bg-slate-900 text-slate-400 pt-16 pb-8 border-t border-slate-800">
     <div class="max-w-6xl mx-auto px-6">
       <div class="grid grid-cols-2 md:grid-cols-12 gap-8 pb-12 border-b border-slate-800/60">
